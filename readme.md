@@ -429,4 +429,51 @@ fail-on-empty-beans: false`
   * suffix : 뒤에 붙여주는 경로명
   * 즉 test가 리턴값이면 /WEB-INF/views/test.jsp/test.jsp.jsp
 
+* jpa
+  * use-new-id-generator-mappings : false -> jpa가 사용하는 기본 넘버링 전략을 사용하지 않는다
+  * ddl-auto: create -> 프로젝트 실행할때마다 db를 자동으로 만드는것. 나중에는 update로 바꿔줘야함.    
+  * show-sql : 콘솔창에 db 상태를 보여줄 것인가. 
+  * properties.hibernate.format_sql : true -> show-sql 동작시 원래 한줄로 나오는데, 이를 보기 편하게 바꿔줌
+  * physical-strategy -> entity(table)을 만들때, 변수명 그대로 db에 field를 넣어준다는 것.
+    * 만일 SpringPhysicalNamingStrategy를 사용하면 만일 myEmail이라는 필드가 myEmail이 아니라, my_Email 이런식으로 저장함.
+  
+
+
+
 나머지는 진도나가면서 차근차근 알아갈 예정.
+
+-------------------------------
+## 18. user 테이블 생성
+
+ORM -> JAVA(다른언어) Object -> 테이블로 매핑해주는 기술 (JPA의 기술)
+```
+package com.cos.blog.model;
+
+
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
+
+import javax.persistence.*;
+import java.sql.Timestamp;
+
+@Entity // User 클래스가 자동으로 MySQL에 테이블이 생성 된다.
+public class User {
+
+    @Id //primarykey
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 프로젝트에서 연결된 database의 넘버링 전략을 따라간다.
+    private int id; //시퀀스, mysql에서는 auto_increment
+
+    //각 변수 바로 위에 annotaion을 주어서 제약 넣어주는것.
+    @Column(nullable = false,length = 30)
+    private String username;
+    //암호화 시킬것이기 때문에 길이 넉넉하게
+    @Column(nullable = false,length = 100)
+    private String password;
+    @Column(nullable = false,length = 50)
+    private String email;
+    @ColumnDefault("'user'") // 문자라는걸 알려주기 위해 따옴표 넣어주고. role의 디폴트값 정해줌.
+    private String role; //String말고 Enum으로 사용하는게 더 좋음. admin,user,manager의 권한을 넣는것인데 String이면 말도안되는 role을 넣어버릴수도 있음.
+    @CreationTimestamp // 시간이 자동으로 등록됨. 물론 MySQL에서 now나 자바에서 systime을 이용해도 상관없음.
+    private Timestamp createDate; //자바 sql이 내재한 변수
+
+}```
