@@ -1,6 +1,7 @@
 package com.cos.blog.test;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 
 //생성자 만드는 롬북명령어
-@AllArgsConstructor
+//@AllArgsConstructor
 
 // final 붙은 변수에 대한 생성자 생성
 //@RequiredArgsConstructor
@@ -33,5 +34,12 @@ public class Member {
     private String password;
     private String email;
 
-
+    @Builder
+    //builder -> id값은 자동으로 증가하는 sequence로 만들고 싶다
+    //builder를 이용하면 객체를 만들때 넣고싶은 부분만 넣을수 있음.
+    public Member(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
 }

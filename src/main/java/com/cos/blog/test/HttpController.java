@@ -16,7 +16,9 @@ public class HttpController {
 
     @GetMapping("/http/lombok")
     public String lombokTest() {
-        Member m = new Member(1,"asd","asdasd","asdasdasd@asd.asd");
+        // Member m = new Member(1,"asd","asdasd","asdasdasd@asd.asd");
+        //builder를 이용하면 지정한 부분에다가 만들수 있으며, id값은 자동으로 할당됨.
+        Member m = Member.builder().username("ssar").password("asdasd").email("aaa@naaa.aaa").build();
         System.out.println(TAG + "getter : "+ m.getId());
         m.setId(5000);
         System.out.println(TAG + "setter : "+ m.getId());
