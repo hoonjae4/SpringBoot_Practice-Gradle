@@ -344,5 +344,27 @@ C\사용자\사용자명\.m2\repository -> maven이 관리하는 라이브러리
 
 repository\org\projectlombook\lombook\버전 -> jar파일 cmd로 실행(git bash도 가능)후 idle을 sts로 설정후 닫기.
 
-롬북을 이용하면 @Getter,@Setter를 이용해 getter,setter를 쉽게 생성 가능하고, 둘 다 생성하고 싶으면 @Data를 이용하자.
-@AllArgsConstructor -> 생성자
+**롬북을 이용하면 @Getter,@Setter를 이용해 getter,setter를 쉽게 생성 가능하고, 둘 다 생성하고 싶으면 @Data를 이용하자.**
+**@AllArgsConstructor -> 생성자**
+
+  `Member m = new Member(1,"asd","asdasd","asdasdasd@asd.asd");
+  Member m = Member.builder().username("ssar").password("asdasd").email("aaa@naaa.aaa").build();
+  System.out.println(TAG + "getter : "+ m.getId());
+  m.setId(5000);
+  System.out.println(TAG + "setter : "+ m.getId());`
+
+**@builder를 이용하면 객체 생성시 원하는 필드를 직접 입력해 가져올수 있음.** 
+  
+  Member.java
+  `@Builder
+  public Member(String username, String password, String email) {
+  this.username = username;
+  this.password = password;
+  this.email = email;
+  }`
+
+  BlogApplication.java
+  `
+  Member m = Member.builder().username("ssar").password("asdasd").email("aaa@naaa.aaa").build();`
+  -----------------------------------
+
