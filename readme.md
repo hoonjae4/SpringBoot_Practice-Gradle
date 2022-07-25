@@ -368,3 +368,65 @@ repository\org\projectlombook\lombook\버전 -> jar파일 cmd로 실행(git bash
   Member m = Member.builder().username("ssar").password("asdasd").email("aaa@naaa.aaa").build();`
   -----------------------------------
 
+## 17강. yml 설정
+
+프로젝트 설정 파일을 말하는데 종류에는 xml,json,yml,yaml등이 있다
+xml은 가독성이 불편하지만 이를 개선한게 json이고 json보다 더 개선된게 yaml이다.
+yaml에서 key,value 사이에는 한칸씩 띄워져 있어야함 (space)
+
+
+`server:
+port: 8000
+servlet:
+context-path: /blog
+encoding:
+charset: UTF-8
+enabled: true
+force: true`
+
+`spring:
+mvc:
+view:
+prefix: /WEB-INF/views/
+suffix: .jsp`
+
+`datasource:
+driver-class-name: com.mysql.cj.jdbc.Driver
+url: jdbc:mysql://localhost:3306/blog?serverTimezone=Asia/Seoul
+username: cos
+password: cos1234`
+
+`jpa:
+open-in-view: true
+hibernate:
+ddl-auto: create
+naming:
+physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+use-new-id-generator-mappings: false
+show-sql: true
+properties:
+hibernate.format_sql: true`
+
+`jackson:
+serialization:
+fail-on-empty-beans: false`
+
+우리 프로젝트에서 사용하는 yml
+* server
+  * port -> 내가 사용할 포트
+  * context-path -> localhost:8080 다음 나올 주소.
+
+* database
+  * db 진입을 위한 기본적인 설정
+
+브라우저는 정적 파일을 요청해야 하는데, jsp는 정적 파일이 아님.
+그래서 브라우저에서 찾지를 못함. 그래서 src -> main -> webapp->WEB-INF-views 라는 폴더로 옮겨서
+여기서 인식을 시켜줘야함.
+
+여기서 jsp의 경로를 인식시켜 주기 위해 yml에 설정을 주입시켜줌.
+* spring
+  * prefix : controller가 return할때 앞에 붙여주는 경로명
+  * suffix : 뒤에 붙여주는 경로명
+  * 즉 test가 리턴값이면 /WEB-INF/views/test.jsp/test.jsp.jsp
+
+나머지는 진도나가면서 차근차근 알아갈 예정.
