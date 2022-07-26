@@ -448,11 +448,8 @@ fail-on-empty-beans: false`
 ORM -> JAVA(다른언어) Object -> 테이블로 매핑해주는 기술 (JPA의 기술)
 ```
 package com.cos.blog.model;
-
-
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
-
 import javax.persistence.*;
 import java.sql.Timestamp;
 
@@ -476,4 +473,34 @@ public class User {
     @CreationTimestamp // 시간이 자동으로 등록됨. 물론 MySQL에서 now나 자바에서 systime을 이용해도 상관없음.
     private Timestamp createDate; //자바 sql이 내재한 변수
 
-}```
+}
+```
+--------------------------
+## 19 데이터베이스 한글설정 -스킵
+
+----------------------------
+
+## 20~21. Board,Reply 테이블 생성 -> User와 동일하게 설정하자
+
+**한 User가 여러개의 Board를 작성할 수 있으므로 Board의 테이블을 설정할때 User를 Foreign key로 갖도록 설정하자.**
+**Reply도 Board와 Many to one, User와 Many to one 을 형성하도롱 설정하자**
+
+Board.java
+
+```
+@ManyToOne // board가 many, user는 one ->한 명의 유저는 여러 글을 쓸 수 있다.
+@JoinColumn(name="userId")
+private User user; //글을 적은 사람. DB는 오브젝트를 저장할수 없기때문에 foreign key를 사용하지만, java에서는 오브젝트를 저장할수 있음.
+// 그러나 이러면 db에서 충돌이 나지 않는가? -> JPA ORM을 사용하면 이를 자동으로 해결해줌. 자동으로 foreignkey로 인식
+```
+
+Reply.java
+```
+    @ManyToOne
+    @JoinColumn(name="boardId")
+    private Board board;
+    
+    @ManyToOne
+    @JoinColumn(name="userId")
+    private User user;
+```
