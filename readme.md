@@ -538,7 +538,7 @@ Annotation에 의존하는건 좋지 않음.
   그래서 직접 수정하기로 함.
   아래의 예제와는 다르게 if문을 이용해서 null이면 default값으로 빼주는 형태로 만들수도 있음.
   
-  DummyController.java
+  DummyController.java 
   ```
   user.setRole(RoleType.USER);
   ```
@@ -561,3 +561,6 @@ Annotation에 의존하는건 좋지 않음.
   이런식으로 enum을 이용하면 만일 개발자가 field를 집어넣을때 헷갈리거나 실수할 일이 적어진다. 그냥 String으로 해도 상관은 없다.
 
 
+## 25 + a - yml, jpa-ddl 을 create에서 update로 변경
+
+-----------------------------------
