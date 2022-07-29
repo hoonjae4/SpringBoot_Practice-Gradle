@@ -526,3 +526,38 @@ fetch 속성에 대해서 따로 학습하기
 
 JpaRepository interface를 이용하면 Table을 손쉽게 다룰수 있다.
 
+---------------------------
+
+## 25강 - 회원가입을 위한 enum 사용법
+
+**user model에 @DynamicInsert를 추가해, null인 필드를 자동으로 insert 하지 못하게 함**
+  앞 예제에서 role에 default를 이미 user로 설정한 채로 insert를 하는데, 필드를 지정해주다 보니 null값이 들어가 default인 user가 들어가지 않는 현상이 생김.
+  이런 현상을 방지하기 위해 null값은 insert를 하지 않게끔 dynamicinsert를 넣어주자.
+
+Annotation에 의존하는건 좋지 않음.
+  그래서 직접 수정하기로 함.
+  아래의 예제와는 다르게 if문을 이용해서 null이면 default값으로 빼주는 형태로 만들수도 있음.
+  
+  DummyController.java
+  ```
+  user.setRole(RoleType.USER);
+  ```
+  
+  User.java
+  ```
+  @Enumerated(EnumType.STRING) //이 field의 enumtype은 string이다.
+  private RoleType role;
+  ```
+  
+  RoleType.java
+  ```
+  package com.cos.blog.model;
+
+  public enum RoleType{
+      USER, ADMIN,
+  }
+  ```
+
+  이런식으로 enum을 이용하면 만일 개발자가 field를 집어넣을때 헷갈리거나 실수할 일이 적어진다. 그냥 String으로 해도 상관은 없다.
+
+

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicInsert;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -17,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 
+// @DynamicInsert // null인 부분을 자동으로 insert하지 않음.
 @Entity // User 클래스가 자동으로 MySQL에 테이블이 생성 된다.
 public class User {
 
@@ -33,7 +35,10 @@ public class User {
     @Column(nullable = false,length = 50)
     private String email;
     @ColumnDefault("'user'") // 문자라는걸 알려주기 위해 따옴표 넣어주고. role의 디폴트값 정해줌.
-    private String role; //String말고 Enum으로 사용하는게 더 좋음. admin,user,manager의 권한을 넣는것인데 String이면 말도안되는 role을 넣어버릴수도 있음.
+    //private String role; //String말고 Enum으로 사용하는게 더 좋음. admin,user,manager의 권한을 넣는것인데 String이면 말도안되는 role을 넣어버릴수도 있음.
+    @Enumerated(EnumType.STRING) //이 field의 enumtype은 string이다.
+    private RoleType role;
+
     @CreationTimestamp // 시간이 자동으로 등록됨. 물론 MySQL에서 now나 자바에서 systime을 이용해도 상관없음.
     private Timestamp createDate; //자바 sql이 내재한 변수
 

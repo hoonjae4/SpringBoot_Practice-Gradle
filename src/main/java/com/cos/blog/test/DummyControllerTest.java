@@ -1,5 +1,6 @@
 package com.cos.blog.test;
 
+import com.cos.blog.model.RoleType;
 import com.cos.blog.model.User;
 import com.cos.blog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class DummyControllerTest {
         System.out.println("email : " + user.getEmail());
         System.out.println("role : " + user.getRole());
         System.out.println("createDate : " + user.getCreateDate());
+
+        user.setRole(RoleType.USER);
         userRepository.save(user);
         return "가입완료";
     }
