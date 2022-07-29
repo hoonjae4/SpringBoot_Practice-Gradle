@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -35,5 +36,6 @@ public class User {
     private String role; //String말고 Enum으로 사용하는게 더 좋음. admin,user,manager의 권한을 넣는것인데 String이면 말도안되는 role을 넣어버릴수도 있음.
     @CreationTimestamp // 시간이 자동으로 등록됨. 물론 MySQL에서 now나 자바에서 systime을 이용해도 상관없음.
     private Timestamp createDate; //자바 sql이 내재한 변수
+
 
 }

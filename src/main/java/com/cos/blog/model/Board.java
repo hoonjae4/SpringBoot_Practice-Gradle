@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -39,5 +40,14 @@ public class Board {
 
     @CreationTimestamp
     private Timestamp createDate;
+    
+    //연관관계의 주인 -> FK를 가진 오브젝트
+    @OneToMany(mappedBy = "board",fetch = FetchType.LAZY) //reply table에 있는 board를 넣어줌.
+    // mappedBy가 있으면 연관관계의 주인이 아님을 의미함(FK가 아니다), 즉 db에 column을 만들지 마라. Join을 통해 값을 얻기 위해 필요한 것
+
+    //
+    //@JoinColumn(name="replyId") -> 필요가 없음. forein key까지 가지게 되면 하나의 row에는 하나의 값만을 가지는 데이터베이스의 특성(원자성)상
+    //board하나에 100개의 reply가 있다고 가정했을때 그 db의 크기는 매우 커지게 됨.
+    private List<Reply> reply; //하나의 게시글은 여러개의 reply가 필요함 그래서 여러개를 담을 List를 가져옴
 
 }
