@@ -526,6 +526,8 @@ fetch 속성에 대해서 따로 학습하기
 
 JpaRepository interface를 이용하면 Table을 손쉽게 다룰수 있다.
 
+Repository 사용시 사용하고자 하는 Controller에 @Autowired annotation 작성해서 의존성 주입 하자.
+
 ---------------------------
 
 ## 25강 - 회원가입을 위한 enum 사용법
@@ -564,3 +566,40 @@ Annotation에 의존하는건 좋지 않음.
 ## 25 + a - yml, jpa-ddl 을 create에서 update로 변경
 
 -----------------------------------
+
+## 26 - id로 select
+
+```
+public User detail(@PathVariable int id) {
+//findById는 optional return이기 때문에 null인지 아닌지 판단을 하기도 해야함.
+//findById.get()은 그냥 바로 user 객체 return -> null이 절대 나올수 없는 상황에서만 사용
+//findById.orElseGet method는 찾아보자.
+// illegalArguementException 으로 잘못된 id값을 처리하자.
+
+        // interface는 new객체를 생성할수가 없음.
+        // 그래서 불러오는 동시에 method를 오버라이딩 해서, new 객체를 생성함.
+        /*
+        User user = userRepository.findById(id).orElseThrow(new Supplier<IllegalArgumentException>() {
+            @Override
+
+            public IllegalArgumentException get() {
+                return new IllegalArgumentException("해당 유저는 없습니다. id : " + id);
+            }
+        });
+        */
+        //위 method를 람다식으로 가독성 좋게 만들수 있음
+
+        User user = userRepository.findById(id).orElseThrow(()->{
+            return new IllegalArgumentException("해당 유저는 없습니다. id : " + id);
+        });
+
+        // Restcontroller -> html이 아닌 데이터를 return하는 controller
+        // 요청 : 웹브라우저
+        // user 객체 -> 자바 오브젝트 -> 웹브라우저가 이해하지 못함
+        // 따라서 웹브라우저가 이해할수 있는 데이터로 변환해줘야함 -> JSON -> 스프링의 messageconverter가 응답시 자동으로 작동해서 변환해줌.
+        return user;
+    }
+```
+
+---------------------------------------------------
+
