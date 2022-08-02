@@ -712,8 +712,8 @@ JPA에서는 트랜잭션이 끝나는 시점에 변화가 있는 모든 엔티�
 Repository의 deleteById를 이용해 데이터를 삭제할때, 그냥 삭제 해버리면 존재하지 않거나, 잘못 매칭된 값을 삭제하는 경우가 있으니
 try catch를 통해 분기를 해주도록 하자.
 
-```aidl
-@DeleteMapping("/dummy/user/{id}")
+```
+  @DeleteMapping("/dummy/user/{id}")
     public String delete(@PathVariable int id){
         try {
             userRepository.deleteById(id);
@@ -726,4 +726,33 @@ try catch를 통해 분기를 해주도록 하자.
     }
 ```
 ------------------------------------------------
+## 31강 - Exception 처리
+
+Exception을 처리할때 그냥 IllegalArgumentException과 같은 화면을 그냥 다 출력하는건 크게 의미가 없다.
+그래서 우리는 Exception handler를 따로 만들어서 handling 해주면 된다.
+
+```
+package com.cos.blog.handler;
+
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
+
+    @ControllerAdvice //모든 Exception이 발생하면 이 Class로 들어오게 하는 Annotation
+    @RestController
+    public class GlobalExceptionHandler {
+        //IllegalArgumentException에 대한 Exception이 발생하면 이곳으로 오라.
+        //만일 모든 Exception을 하나로 처리하고 싶으면 Exception.class로 하면 된다.
+        @ExceptionHandler(value = IllegalArgumentException.class)
+        public String handleArgumentException(IllegalArgumentException e) {
+            return "<h1>"+e.getMessage()+"</h1>";
+        }
+}
+```
+프로젝트에 handler라는 패키지를 따로 만들어 GlobalExceptionHandler.java 클래스를 생성해주고
+@ControllerAdvice Annotation을 통해 모든 Exception 발생시, 이 Class를 호출하게 해준다.
+그리고 @ExceptionHandler(value=?) 를 통해서 Handle하고자 하는 Exception을 설정해주면된다.
+
+-------------------------------------------------------------
+
 
