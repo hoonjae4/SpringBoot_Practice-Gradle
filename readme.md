@@ -755,4 +755,28 @@ import org.springframework.web.bind.annotation.RestController;
 
 -------------------------------------------------------------
 
+## 32강 - 스프링 기본 파싱 전략과 Json 통신
 
+1. Get요청 
+   주소에 데이터를 담아 보낸다. key=value
+   localhost:8080/blog/user?**username=ssar**
+   특징 : 데이터를 body로 보내지 않음
+2. Post,Put,Delete
+   보통 담아 보내야할 데이터가 많음. 
+   그래서 Body에 데이터를 담아 보낸다. -> form 태그 post -> 자바스크립트로 요청해야함.
+   이 때 데이터의 형태는 Json이 좋다. (Ajax요청 and 데이터는 Json으로 통일)
+3. 스프링 컨트롤러의 파싱 전략
+   스프링 컨트롤러는 key=value를 자동으로 변수에 담아줌.
+   그래서 key=value형태는 변수 Controller(String username, String email)등으로 받을수 있음
+   이 때 해당 object에 setter가 없으면 불가능.
+   ```
+   public STring home(User user) {
+        return "home";
+   } 
+    ```
+   의 형태에서 user에 setter가 없으면 불가능.
+   우리가 작성했던 DummyController Join 함수에서도 이와 같은 형태를 사용해서 body에 담긴 key value 매칭을 자동으로 user에 해줌.
+   만일 없는 필드의 key,value값은 스프링에서 자동으로 무시해버림.
+4. **key-value가 아닌 Data는 @RequestBody 매개변수에 Annotation을 걸어준다.**
+5. Json Data를 Ajax로 처리하자.
+------------------------------------------------------------

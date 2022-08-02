@@ -27,7 +27,7 @@ public class User {
     private int id; //시퀀스, mysql에서는 auto_increment
 
     //각 변수 바로 위에 annotaion을 주어서 제약 넣어주는것.
-    @Column(nullable = false,length = 30)
+    @Column(nullable = false,length = 30, unique = true)
     private String username;
     //암호화 시킬것이기 때문에 길이 넉넉하게
     @Column(nullable = false,length = 100)
