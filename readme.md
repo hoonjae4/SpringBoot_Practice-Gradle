@@ -603,3 +603,54 @@ public User detail(@PathVariable int id) {
 
 ---------------------------------------------------
 
+## 27 - 전체 select 및 paging 테스트
+
+스프링부트에는 다양한 annotation이 있으며 이를 통해 개발을 편리하게 할 수 있다.
+이를 이용해 paging을 테스트 해보자
+
+  먼저 전체 select는 간단하니 코드만 보고 가자
+
+  ```
+  @GetMapping("/dummy/user")
+      public List<User> list(){
+          return userRepository.findAll();
+      }
+  ```
+  간단한 소스코드이다. repository를 이용해 findall을 해주면 전체 select가 된다
+
+  페이징은 annotation을 이용해서 진행한다
+  ```
+    @GetMapping("/dummy/user/page{id}")
+    public Page<User> pageList(@PageableDefault(size=2,sort="id",direction = Sort.Direction.DESC) Pageable pageable){
+        Page<User> users = userRepository.findAll(pageable);
+        return users;
+    }
+  ```
+  먼저 return을 Page 객체로 잡고, @PageableDefault annotation을 이용한다.
+  size는 한 페이지에 몇개의 user를 가져올 것인가, sort는 정렬 기준, direction는 오름차순과 내림차순을 정하는 방식이다. 
+  그래서 localhost:8080/blog/dummy/user/page?page=0,page=1,page=2 이런식으로 paging이 가능하다.
+  여기서 page=0은 Pageable pageable 에서 받아오는 **쿼리스트링**이다.
+  
+  그러나, return값이 Page객체이기때문에 필요한 content 영역 외의 값인 page객체의 요소들이 추가로 출력이 될 수 있다. 이를 예방하기 위해 return값을 List로 바꾸고
+  getcontent method를 이용해 user content만 return을 해줄수 있다
+  ```
+    @GetMapping("/dummy/user")
+    public List<User> pageList(@PageableDefault(size=2,sort="id",direction = Sort.Direction.DESC) Pageable pageable){
+        List<User> users = userRepository.findAll(pageable).getContent();
+        return users;
+    }
+  ```
+  
+  ```
+    @GetMapping("/dummy/user")
+    public List<User> pageList(@PageableDefault(size=2,sort="id",direction = Sort.Direction.DESC) Pageable pageable){
+        Page<User> pagingUser = userRepository.findAll(pageable);
+        
+        List<User> users = pagingUser.getContent();
+        return users;
+    }
+  ```
+  그러나, Page 객체의 필드값을 이용하는 경우도 있으니, Page객체를 따로 선언하고 필요한 부분만을 return하며 사용할수도 있음.
+
+------------------------------------------------------------
+
