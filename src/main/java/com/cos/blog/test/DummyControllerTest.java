@@ -8,11 +8,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -21,6 +19,39 @@ public class DummyControllerTest {
     @Autowired //의존성 주입, DummyController를 메모리에 띄울때 userRepository는 null임
     //autowired가 userRepository를 동시에 메모리에 올려주는 역할을 해줌.
     private UserRepository userRepository;
+
+
+    //아래 get과 겹치는거 걱정 X, put과 get매핑이라 알아서 구분해줌.
+    //email,password 수정.
+    // Join 에서는 body를 통해 user data를 가져오는 식으로 했지만 이번엔 Json으로 해보자
+    @Transactional
+    @PutMapping("/dummy/user/{id}")
+    public User updateUser(@PathVariable int id, @RequestBody User requestUser){
+        requestUser.setId(id);
+        //save는 insert할때 쓰는것
+        //but id가 있으면 update를 해줌.
+        //그러나 다른 필드가 null로 변해버리는 오류가 생김. 그래서 잘 쓰지 않음
+        // save를 통해 업데이트를 하는 방식
+        /*
+        User user = userRepository.findById(id).orElseThrow(()->{
+            return new IllegalArgumentException("수정 실패");
+        });
+        user.setPassword(requestUser.getPassword());
+        user.setEmail(requestUser.getEmail());
+        userRepository.save(requestUser);
+         */
+
+
+        //더티 체킹 @Transaction annotation 이용
+        User user = userRepository.findById(id).orElseThrow(()->{
+            return new IllegalArgumentException("수정 실패");
+        });
+        user.setPassword(requestUser.getPassword());
+        user.setEmail(requestUser.getEmail());
+        
+        //@Transactional을 이용하면 별도의 save 없이도 update가 됨.
+        return null;
+    }
 
     @GetMapping("/dummy/users")
     public List<User> list(){

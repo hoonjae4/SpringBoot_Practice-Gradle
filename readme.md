@@ -654,3 +654,39 @@ public User detail(@PathVariable int id) {
 
 ------------------------------------------------------------
 
+## 28강 - update test
+
+Update시에는 @PutMapping을 이용함.
+Put형식과 Get형식은 스프링에서 알아서 구분해주기 때문에 주소가 같아도 ㄱㅊ.
+Update시에는 Repository의 save method를 이용함.
+save는 insert에 이용하는데, 만일 DB에 이미 존재하는 id가 있다면 update를 해줌.
+그러나, 지정하지 않은 다른 field의 값은 null로 바뀌는 현상이 생기는데, 이를 예방하기 위해 put요청시 받아온 id값을 통해 객체를 찾고, 필요한 부분만 수정해 save를 해주는 형태로 사용함
+
+```
+@PutMapping("/dummy/user/{id}")
+    public User updateUser(@PathVariable int id, @RequestBody User requestUser){
+        requestUser.setId(id);
+        User user = userRepository.findById(id).orElseThrow(()->{
+            return new IllegalArgumentException("수정 실패");
+        });
+        user.setPassword(requestUser.getPassword());
+        user.setEmail(requestUser.getEmail());
+        userRepository.save(requestUser);
+        return null;
+    }
+```
+
+@Transactional annotation을 통해 save가 없이도 데이터가 update되게끔 만들수 있는데 이를 '더티체킹' 이라고함.
+```DummyControllerTest.java
+@Transactional
+@PutMapping("/dummy/user/{id}")
+    public User updateUser(@PathVariable int id, @RequestBody User requestUser){
+        requestUser.setId(id);
+        User user = userRepository.findById(id).orElseThrow(()->{
+            return new IllegalArgumentException("수정 실패");
+        });
+        user.setPassword(requestUser.getPassword());
+        user.setEmail(requestUser.getEmail());
+        return null;
+    }
+```
