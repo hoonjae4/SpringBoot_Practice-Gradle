@@ -707,3 +707,23 @@ JPA에서는 트랜잭션이 끝나는 시점에 변화가 있는 모든 엔티�
 * JPA는 변경된 엔티티를 DB단에 반영하여 한번에 쿼리문을 날림.
 --------------------------------------
 
+## 30강 - delete 연습
+
+Repository의 deleteById를 이용해 데이터를 삭제할때, 그냥 삭제 해버리면 존재하지 않거나, 잘못 매칭된 값을 삭제하는 경우가 있으니
+try catch를 통해 분기를 해주도록 하자.
+
+```aidl
+@DeleteMapping("/dummy/user/{id}")
+    public String delete(@PathVariable int id){
+        try {
+            userRepository.deleteById(id);
+        } //catch에서 execption은 오류뜨는거 보고 확인해서 잡으면 되는데
+        // 귀찮으면 그냥 Exception e로 잡아도 됨.
+        catch (EmptyResultDataAccessException e){
+            return "삭제 실패 - 존재하지 않는 ID";
+        }
+        return "삭제완료";
+    }
+```
+------------------------------------------------
+

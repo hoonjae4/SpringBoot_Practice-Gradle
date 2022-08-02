@@ -4,6 +4,7 @@ import com.cos.blog.model.RoleType;
 import com.cos.blog.model.User;
 import com.cos.blog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,12 +20,25 @@ public class DummyControllerTest {
     @Autowired //의존성 주입, DummyController를 메모리에 띄울때 userRepository는 null임
     //autowired가 userRepository를 동시에 메모리에 올려주는 역할을 해줌.
     private UserRepository userRepository;
-
+    //---------------------------------------------------------
+    @DeleteMapping("/dummy/user/{id}")
+    public String delete(@PathVariable int id){
+        // userRepository.deleteById(id); deletebyId만 하면 위험.
+        try {
+            userRepository.deleteById(id);
+        } //catch에서 execption은 오류뜨는거 보고 확인해서 잡으면 되는데
+        // 귀찮으면 그냥 Exception e로 잡아도 됨.
+        catch (EmptyResultDataAccessException e){
+            return "삭제 실패 - 존재하지 않는 ID";
+        }
+        return "삭제완료";
+    }
+    //---------------------------------------------------------
 
     //아래 get과 겹치는거 걱정 X, put과 get매핑이라 알아서 구분해줌.
     //email,password 수정.
     // Join 에서는 body를 통해 user data를 가져오는 식으로 했지만 이번엔 Json으로 해보자
-    @Transactional
+    @Transactional //함수 종료시 자동 commit, 알아서 저장된다는 뜻.
     @PutMapping("/dummy/user/{id}")
     public User updateUser(@PathVariable int id, @RequestBody User requestUser){
         requestUser.setId(id);
@@ -50,8 +64,9 @@ public class DummyControllerTest {
         user.setEmail(requestUser.getEmail());
         
         //@Transactional을 이용하면 별도의 save 없이도 update가 됨.
-        return null;
+        return user;
     }
+    //---------------------------------------------------------
 
     @GetMapping("/dummy/users")
     public List<User> list(){
@@ -67,7 +82,7 @@ public class DummyControllerTest {
         return users;
     }
 
-
+    //---------------------------------------------------------
     @GetMapping("/dummy/user/{id}")
     // {id} 주소로 파라메터를 전달 받을 수 있음
     // pathvariable annoation을 이용해 {id}를 인식하게끔 해주자
@@ -101,6 +116,7 @@ public class DummyControllerTest {
         // 따라서 웹브라우저가 이해할수 있는 데이터로 변환해줘야함 -> JSON -> 스프링의 messageconverter가 응답시 자동으로 작동해서 변환해줌.
         return user;
     }
+    //---------------------------------------------------------
     @PostMapping("/dummy/join")
     //String join(@RequestParam("username") String username, @RequestParam("password") String password, @RequestParam("email") String email)
     //이런식으로 Request Param을 이용해 받아오면 String a, String b, String c로 해도 알아서 매핑됨.
@@ -121,4 +137,5 @@ public class DummyControllerTest {
         userRepository.save(user);
         return "가입완료";
     }
+    //---------------------------------------------------------
 }
