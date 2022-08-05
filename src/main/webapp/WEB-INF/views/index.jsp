@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
 </head>
+
 <body>
 
 <nav class="navbar navbar-expand-md bg-dark navbar-dark">
@@ -30,14 +31,27 @@
 </nav>
 <br>
 
-<div class="container">
-    <div class="card">
-        <div class="card-body">
-            <h4 class="card-title">Card title</h4>
-            <p class="card-text">Some example text. Some example text.</p>
-            <a href="#" class="card-link">Card link</a>
-            <a href="#" class="card-link">Another link</a>
-        </div>
+<div class="card m-2">
+    <div class="card-body">
+        <h4 class="card-title">제목 적는 부분</h4>
+        <p class="card-text">내용 적는 부분</p>
+        <a href="#" class="btn btn-primary">상세 보기</a>
+    </div>
+</div>
+
+<div class="card m-2">
+    <div class="card-body">
+        <h4 class="card-title">제목 적는 부분</h4>
+        <p class="card-text">내용 적는 부분</p>
+        <a href="#" class="btn btn-primary">상세 보기</a>
+    </div>
+</div>
+
+<div class="card m-2">
+    <div class="card-body">
+        <h4 class="card-title">제목 적는 부분</h4>
+        <p class="card-text">내용 적는 부분</p>
+        <a href="#" class="btn btn-primary">상세 보기</a>
     </div>
 </div>
 
