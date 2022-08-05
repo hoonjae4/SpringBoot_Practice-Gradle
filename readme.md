@@ -780,3 +780,8 @@ import org.springframework.web.bind.annotation.RestController;
 4. **key-value가 아닌 Data는 @RequestBody 매개변수에 Annotation을 걸어준다.**
 5. Json Data를 Ajax로 처리하자.
 ------------------------------------------------------------
+
+## 33강 - 기본화면 구성 - 간단한 부트스트랩 작업이므로 패스.
+
+## 34강 - 로그인. 회원가입 구성
+HTML 에서 자바스크립트 Script태그는 최하단에 두자. 그래야 인터프리터가 읽으면서 식별 가능.
