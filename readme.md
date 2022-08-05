@@ -785,3 +785,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 ## 34강 - 로그인. 회원가입 구성
 HTML 에서 자바스크립트 Script태그는 최하단에 두자. 그래야 인터프리터가 읽으면서 식별 가능.
+
+## 35강 - 회원가입 기능
+
+static/js 에 정적인 자바스크립트 소스파일을 두자.

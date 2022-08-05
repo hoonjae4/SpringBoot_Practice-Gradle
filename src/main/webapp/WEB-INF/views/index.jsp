@@ -25,13 +25,5 @@
     </div>
 </div>
 <%@ include file="layout/footer.jsp" %>
-<!--Script는 body끝과 가장 가까운 곳에 넣는다.-->
-<!--인터프리터가 위에서 아래로 읽기 때문.-->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
 
 

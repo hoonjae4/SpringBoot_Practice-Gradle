@@ -2,7 +2,8 @@
 
 <%@ include file="../layout/header.jsp" %>
 <div class="container">
-    <form action="/action_page.php">
+    <!-- <form action="/user/join" method="POST"> 을 사용하지 않을것-->
+    <form>
         <div class="form-group">
             <label for="username">Username:</label>
             <input type="text" class="form-control" placeholder="Enter username" id="username">
@@ -20,18 +21,11 @@
                 <input class="form-check-input" type="checkbox"> Remember me
             </label>
         </div>
-        <button type="submit" class="btn btn-primary">회원가입</button>
     </form>
+    <button id="btn-save" class="btn btn-primary">회원가입</button>
 </div>
-
+<!-- static 경로는 알아서 찾아감 -->
+<script src="/blog/js/user.js"></script>
 <%@ include file="../layout/footer.jsp" %>
-<!--Script는 body끝과 가장 가까운 곳에 넣는다.-->
-<!--인터프리터가 위에서 아래로 읽기 때문.-->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
 
 
