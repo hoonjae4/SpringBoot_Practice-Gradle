@@ -3,9 +3,10 @@
     <properties>
       <option name="frameworkName" value="jQuery" />
     </properties>
-    <CLASSES>
-      <root url="file://$PROJECT_DIR$/src/main/webapp/assets/lib/jquery-3.6.0.min.js" />
-    </CLASSES>
+    <CLASSES />
+    <DOCUMENTATION>
+      <root url="https://code.jquery.com/jquery-3.6.0.js" />
+    </DOCUMENTATION>
     <JAVADOC />
     <SOURCES />
   </library>

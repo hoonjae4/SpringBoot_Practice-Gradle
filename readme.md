@@ -789,3 +789,86 @@ HTML 에서 자바스크립트 Script태그는 최하단에 두자. 그래야 �
 ## 35강 - 회원가입 기능
 
 static/js 에 정적인 자바스크립트 소스파일을 두자.
+
+## 36 37 생략
+--------------------------------
+## 38강 - Ajax요청 쏘기
+
+controller/Dto/ResponseDto.java
+```aidl
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public class ResponseDto<T> {
+        HttpStatus status;
+        T data;
+    }
+```
+
+controller/apt/UserApiController.java
+```
+package com.cos.blog.controller.api;
+
+import com.cos.blog.controller.dto.ResponseDto;
+import com.cos.blog.model.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class UserApiController {
+    @PostMapping("/api/user")
+    public ResponseDto<Integer> save(@RequestBody User user){
+        System.out.println("호출 ㅇㅋ");
+        //숫자를 그냥 200으로 적는것 보단
+        //HttpStatus를 이용해 성공값을 넣어주는게 더 안전
+        return new ResponseDto<Integer>(HttpStatus.OK,1);
+        //return 1;
+        //return 1이면 ajax done의 resp값이 1이다.
+    }
+}
+
+```
+resources/static/js/user.js
+```aidl
+
+let index = {
+    init: function() {
+        $("#btn-save").on("click", () => {
+            this.save();
+        });
+    },
+    save: function() {
+        //alert('user의 save함수');
+        let data = {
+            username: $("#username").val(),
+            password: $("#password").val(),
+            email: $("#email").val()
+        }
+        //console.log(data);
+        $.ajax({
+            type : "POST",
+            url : "/blog/api/user",
+            //user라는 table에 data를 넣을것이기에 api/user까지만 적자.
+            data : JSON.stringify(data), //데이터를 json으로 변경
+            contentType: "application/json; charset=utf-8",
+            dataType : "json", // 요청에 대한 응답이 왔을때의 데이터가 string인데 이걸 javascript objcet로 저장
+            //회원가입 수행 요청
+        }).done(function(resp){
+            //성공시 done
+            alert("회원가입이 완료 되었습니다.")
+            location.href = "/blog";
+        }).fail(function(error){
+            //실패시 fail
+            alert(JSON.stringify(error));
+        }); //ajax통신을 이용해서 3개의 파라 데이터를 json으로 변경후 insert 요청
+        
+    }
+}
+
+index.init();
+```
+
+이번 강의에서 정말 중요한건 Dto를 설정하는것. 코드 보면서 다시 복습하자.
