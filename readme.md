@@ -1192,3 +1192,11 @@ public BCryptPasswordEncoder encodePWD(){
   }
 ```
 -------------------------------------------------
+## 51강 - CSRF
+
+이번 강의에서 csrf를 disable한 이유는
+spring security가 요청시 csrf token이 없다면 그 요청을 막아버리기 때문.
+spring security는 csrf 공격을 대비하기 위해 csrf token이 없는 요청을 받지 않기 떄문에 이걸 테스트 단계에서는 disable 하고 테스트 해야한다.
+나중에 서비스 완성시 csrf token을 날리면서 요청을 해주면 된다.
+
+------------------------------------------------------
