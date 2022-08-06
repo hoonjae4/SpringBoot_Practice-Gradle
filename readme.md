@@ -1160,3 +1160,35 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 ** Ajax와 관련된 로그인 기능이 포함된 UserService, UserApiController,UserRepository 모두 로그인 기능은 주석처리 해주자. 또한 User.js에 있는 Ajax 로그인 함수도 주석처리 **
 
 ------------------------------------------------------
+
+## 50강 - 비밀번호 해쉬화
+
+비밀번호는 보안상의 이유로 항상 암호화해서 저장되어야 한다.
+그럴때 사용하는것이 BCryptPasswordEncode이다.
+
+** com.cos.blog.controller.config.SecurityConfig.java **
+* 필요할때 객체를 불러와 사용하는것도 가능하겠지만 @Bean을 통해 IOC로 객체를 등록해서 사용하는게 더 편리하다
+* 이후에 사용할 곳에서 @Autowired를 작성한 후 가져와서 사용하면 된다.
+* BCryptPasswordEncoder 을 통해 password를 encode 할 수 있다.
+```java
+@Bean 
+public BCryptPasswordEncoder encodePWD(){
+        return new BCryptPasswordEncoder();
+        }
+```
+** UserService.java **
+* @Autowired로 IOC에 올라와 있는 객체를 그냥 이용할 수 있다.
+```java
+@Autowired
+  private BCryptPasswordEncoder encoder;
+  @Transactional //회원가입 전체의 서비스가 하나의 transaction으로 묶이게 됨. 성공시 commit, 실패는 rollback
+  public int 회원가입(User user) {
+    user.setRole(RoleType.USER);
+    String rawPassword = user.getPassword();
+    String encPassword = encoder.encode(rawPassword);
+    user.setPassword(encPassword);
+    userRepository.save(user);
+    return 1;
+  }
+```
+-------------------------------------------------

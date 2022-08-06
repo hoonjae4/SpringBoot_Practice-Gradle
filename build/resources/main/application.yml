@@ -6,8 +6,6 @@ server:
       charset: UTF-8
       enabled: true
       force: true
-    session:
-      timeout: 20s
 
 spring:
   mvc:
