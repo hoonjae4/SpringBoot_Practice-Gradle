@@ -934,3 +934,47 @@ Service를 이용하는 이유는 **트랜젝션을 관리하기 위해서임. �
 ```
 
 --------------------------------------------------------------------------
+## 40강 - RespondDto 수정
+
+앞서 강의에서 우리는 Exception handler를 지정한 바 있다.
+그렇기에 UserService에서 지정한 try, catch가 제대로 동작하지 않고 GlobalExceptionHandler에 정의한
+@ControllerAdvice Annotation에 의해 자동으로 Exception이 전달된다.
+그래서 우리는 이 try catch를 지우고, GloablExceptionHandler를 이용하기로 했다.
+
+**com.cos.blog.Service.UserService.java**
+```
+public int 회원가입(User user) {
+    userRepository.save(user);
+    return 1;
+  }
+```
+
+**com.cos.blog.handler.GlobalExceptionHandler.java**
+* 상태의 값을 표현해 주는 것이 더 좋기 때문에 type을 string으로 바꾸고 e.getMessage()를 넣어주어 오류를 받도록 하였다.
+```
+public ResponseDto<String> handleArgumentException(IllegalArgumentException e) {
+            return new ResponseDto<String>(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.getMessage());
+        }
+```
+
+**com.cos.blog.controller.api.UserApiController.java**
+* 따로 Exception을 다루지 않아도 userService.회원가입 method에서 발생한 Exception이 자동으로 GlobalExceptionHandler로 이동한다.
+```
+public ResponseDto<Integer> save(@RequestBody User user){
+        System.out.println("호출 ㅇㅋ");
+        user.setRole(RoleType.USER);
+        userService.회원가입(user);
+        return new ResponseDto<Integer>(HttpStatus.OK.value(),1); //1이면 성공 -1이면 실패
+    }
+```
+
+**com.cos.blog.Dto.ResponseDto.java**
+* 반환타입을 inteager로 바꿧기 때문에 status또한 int로 바꿔준다.
+```
+public class ResponseDto<T> {
+    int status;
+    T data;
+}
+```
+
+----------------------------------------------------------------------------

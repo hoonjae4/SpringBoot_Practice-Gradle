@@ -20,13 +20,7 @@ public class UserService {
 
   @Transactional //회원가입 전체의 서비스가 하나의 transaction으로 묶이게 됨. 성공시 commit, 실패는 rollback
   public int 회원가입(User user) {
-    try {
-      userRepository.save(user);
-      return 1;
-    } catch (Exception e){
-      e.printStackTrace();
-      System.out.println("User Service: 회원가입() : " + e.getMessage());
-      return -1;
-    }
+    userRepository.save(user);
+    return 1;
   }
 }
