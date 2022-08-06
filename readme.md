@@ -794,7 +794,7 @@ static/js 에 정적인 자바스크립트 소스파일을 두자.
 --------------------------------
 ## 38강 - Ajax요청 쏘기
 
-controller/Dto/ResponseDto.java
+**controller/Dto/ResponseDto.java**
 ```aidl
     @Data
     @NoArgsConstructor
@@ -806,69 +806,131 @@ controller/Dto/ResponseDto.java
     }
 ```
 
-controller/apt/UserApiController.java
+**controller/apt/UserApiController.java**
 ```
-package com.cos.blog.controller.api;
-
-import com.cos.blog.controller.dto.ResponseDto;
-import com.cos.blog.model.User;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
-public class UserApiController {
-    @PostMapping("/api/user")
-    public ResponseDto<Integer> save(@RequestBody User user){
-        System.out.println("호출 ㅇㅋ");
-        //숫자를 그냥 200으로 적는것 보단
-        //HttpStatus를 이용해 성공값을 넣어주는게 더 안전
-        return new ResponseDto<Integer>(HttpStatus.OK,1);
-        //return 1;
-        //return 1이면 ajax done의 resp값이 1이다.
-    }
-}
-
-```
-resources/static/js/user.js
-```aidl
-
-let index = {
-    init: function() {
-        $("#btn-save").on("click", () => {
-            this.save();
-        });
-    },
-    save: function() {
-        //alert('user의 save함수');
-        let data = {
-            username: $("#username").val(),
-            password: $("#password").val(),
-            email: $("#email").val()
+    package com.cos.blog.controller.api;
+    
+    import com.cos.blog.controller.dto.ResponseDto;
+    import com.cos.blog.model.User;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.RequestBody;
+    import org.springframework.web.bind.annotation.RestController;
+    
+    @RestController
+    public class UserApiController {
+        @PostMapping("/api/user")
+        public ResponseDto<Integer> save(@RequestBody User user){
+            System.out.println("호출 ㅇㅋ");
+            //숫자를 그냥 200으로 적는것 보단
+            //HttpStatus를 이용해 성공값을 넣어주는게 더 안전
+            return new ResponseDto<Integer>(HttpStatus.OK,1);
+            //return 1;
+            //return 1이면 ajax done의 resp값이 1이다.
         }
-        //console.log(data);
-        $.ajax({
-            type : "POST",
-            url : "/blog/api/user",
-            //user라는 table에 data를 넣을것이기에 api/user까지만 적자.
-            data : JSON.stringify(data), //데이터를 json으로 변경
-            contentType: "application/json; charset=utf-8",
-            dataType : "json", // 요청에 대한 응답이 왔을때의 데이터가 string인데 이걸 javascript objcet로 저장
-            //회원가입 수행 요청
-        }).done(function(resp){
-            //성공시 done
-            alert("회원가입이 완료 되었습니다.")
-            location.href = "/blog";
-        }).fail(function(error){
-            //실패시 fail
-            alert(JSON.stringify(error));
-        }); //ajax통신을 이용해서 3개의 파라 데이터를 json으로 변경후 insert 요청
-        
     }
-}
 
-index.init();
+```
+**resources/static/js/user.js**
+```
+    let index = {
+        init: function() {
+            $("#btn-save").on("click", () => {
+                this.save();
+            });
+        },
+        save: function() {
+            //alert('user의 save함수');
+            let data = {
+                username: $("#username").val(),
+                password: $("#password").val(),
+                email: $("#email").val()
+            }
+            //console.log(data);
+            $.ajax({
+                type : "POST",
+                url : "/blog/api/user",
+                //user라는 table에 data를 넣을것이기에 api/user까지만 적자.
+                data : JSON.stringify(data), //데이터를 json으로 변경
+                contentType: "application/json; charset=utf-8",
+                dataType : "json", // 요청에 대한 응답이 왔을때의 데이터가 string인데 이걸 javascript objcet로 저장
+                //회원가입 수행 요청
+            }).done(function(resp){
+                //성공시 done
+                alert("회원가입이 완료 되었습니다.")
+                location.href = "/blog";
+            }).fail(function(error){
+                //실패시 fail
+                alert(JSON.stringify(error));
+            }); //ajax통신을 이용해서 3개의 파라 데이터를 json으로 변경후 insert 요청
+            
+        }
+    }
+    
+    index.init();
 ```
 
 이번 강의에서 정말 중요한건 Dto를 설정하는것. 코드 보면서 다시 복습하자.
+
+-------------------------------------------------------------
+## 39강 - 회원가입 세팅 2
+
+회원가입을 위해 Service를 등록해서 사용할 것임.
+Service를 이용하는 이유는 **트랜젝션을 관리하기 위해서임. 여러 트랜젝션을 하나의 트랜젝션으로 관리할수 있는게 서비스.**
+
+**com.cos.blog.Service.UserService.java**
+* @Service를 통해 bean에 등록해주고, 사용시 @Autowired를 통해 의존성을 주입하고 사용하자.
+```
+    package com.cos.blog.service;
+    
+    import com.cos.blog.model.User;
+    import com.cos.blog.repository.UserRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
+    
+    import javax.transaction.Transactional;
+    
+    /*
+    서비스가 필요한 이유
+    1. 트랜젝션 관리 -> 여러 트렌젝션(save같은 작업)을 하나의 트렌젝션으로 묶어서 서비스화 할 수 있음.
+    2. 서비스라는 의미 때문
+     */
+    
+    @Service //스프링이 컴포넌트 스캔을 통해 bean에 등록해줌. bean 등록 -> IOC 해주는것. 메모리에 대신 띄워줌.
+    public class UserService {
+      @Autowired //DI, 의존성 주입
+      private UserRepository userRepository;
+    
+      @Transactional //회원가입 전체의 서비스가 하나의 transaction으로 묶이게 됨. 성공시 commit, 실패는 rollback
+      public int 회원가입(User user) {
+        try {
+          userRepository.save(user);
+          return 1;
+        } catch (Exception e){
+          e.printStackTrace();
+          System.out.println("User Service: 회원가입() : " + e.getMessage());
+          return -1;
+        }
+      }
+    }
+```
+
+**com.cos.blog.controller.api.UserApiController.java**
+* Service를 통해 트랜젝션을 관리하면 코드가 깔끔하고, 가독성도 좋아진다.
+```
+    @RestController
+    public class UserApiController {
+    
+        @Autowired
+        private UserService userService;
+        @PostMapping("/api/user")
+        public ResponseDto<Integer> save(@RequestBody User user){
+            System.out.println("호출 ㅇㅋ");
+            user.setRole(RoleType.USER);
+            int result = userService.회원가입(user);
+            return new ResponseDto<Integer>(HttpStatus.OK,result); //1이면 성공 -1이면 실패
+        }
+    }
+```
+
+--------------------------------------------------------------------------
