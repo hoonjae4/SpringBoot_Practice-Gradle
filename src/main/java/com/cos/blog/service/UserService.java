@@ -4,8 +4,8 @@ import com.cos.blog.model.User;
 import com.cos.blog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 
 /*
 서비스가 필요한 이유
@@ -22,5 +22,12 @@ public class UserService {
   public int 회원가입(User user) {
     userRepository.save(user);
     return 1;
+  }
+
+  //select만 할거라 transactional이 필요없지만
+  // select할때 transaction이 시작되고, 서비스 종료시에 transaction 종료 -> 정확성 증가
+  @Transactional(readOnly = true)
+  public User 로그인(User user) {
+    return userRepository.findByUsernameAndPassword(user.getUsername(),user.getPassword());
   }
 }

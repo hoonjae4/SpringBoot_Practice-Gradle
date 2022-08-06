@@ -981,3 +981,144 @@ public class ResponseDto<T> {
 ## ~45강 까지는 db격리수준과 osiv 기술에 대한 논의점인데, 링크와 구글링을 통해 스스로 공부하자
 
 [https://1-7171771.tistory.com/150](https://1-7171771.tistory.com/150) -> osiv에 대해 정리
+
+-----------------------------------------------
+
+## 46강 - 전통적인 방식의 spring 로그인
+
+전통적인 방식의 로그인 방식은 서비스를 지정하고 세션을 쏴서 프론트에서 받아오는 것.
+
+**layout/loginForm.jsp**
+* Ajax를 이용할 것이기 때문에 버튼을 밖으로 빼줌
+```
+<div class="container">
+    <form>
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" class="form-control" placeholder="Enter username" id="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" placeholder="Enter password" id="password">
+        </div>
+        <div class="form-group form-check">
+            <label class="form-check-label">
+                <input class="form-check-input" type="checkbox"> Remember me
+            </label>
+        </div>
+    </form>
+    <button id="btn-login" class="btn btn-primary">로그인</button>
+</div>
+```
+
+**static/js/user.js**
+* 회원가입과 동일하게 ajax 요청 보냄.
+```
+init: function() {
+        $("#btn-save").on("click", () => {
+            this.save();
+        });
+        $("#btn-login").on("click",() => {
+            this.login();
+        });
+    }
+```
+```
+login: function() {
+        let data = {
+            username: $("#username").val(),
+            password: $("#password").val(),
+        }
+        //console.log(data);
+        $.ajax({
+            type : "POST",
+            url : "/blog/api/user/login",
+            data : JSON.stringify(data),
+            contentType: "application/json; charset=utf-8",
+            dataType : "json",
+            //로그인 수행 요청
+        }).done(function(resp){
+            //성공시 done
+            alert("로그인 완료.")
+            location.href = "/blog";
+        }).fail(function(error){
+            //실패시 fail
+            alert(JSON.stringify(error));
+        });
+    }
+```
+
+**header.jsp**
+* jstl 사용을 위해 라이브러리 추가
+```
+  <%@ taglib prefix = "c" uri = "http://java.sun.com/jsp/jstl/core" %> <!-- jstl 불러오기 -->
+```
+* jstl 문법을 이용해 로그인 분기
+  * c:choose : 시작, c:when : if, c:otherwise : else
+```
+<c:choose>
+    <c:when test =  "${empty sessionScope.principal}">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="/blog/user/loginForm">로그인</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/blog/user/joinForm">회원가입</a>
+            </li>
+        </ul>
+    </c:when>
+    <c:otherwise>
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="/blog/user/writeForm">글쓰기</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/blog/user/userForm">회원정보</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/blog/user/logout">로그아웃</a>
+            </li>
+        </ul>
+    </c:otherwise>
+</c:choose>
+```
+
+**UserService.java**
+* select만 하는 작업이라 Transactional이 필요없지만 정확성 증가를 위해 사용함.
+```
+@Transactional(readOnly = true)
+  public User 로그인(User user) {
+    return userRepository.findByUsernameAndPassword(user.getUsername(),user.getPassword());
+  }
+```
+
+**UserRepository.java**
+* JPA Naming 전략
+* findByUsernameAndPassword 이 함수를 선언만 하면
+* SELECT * FROM user WHERE username=? AND password=?, 이 상태의 쿼리가 동작을 하게 됨.
+```
+public interface UserRepository extends JpaRepository<User,Integer> {
+  User findByUsernameAndPassword(String username, String password);
+
+  /* 이런식으로 정의한게 위와 동일하다.
+  @Query(value = "SELECT * FROM user WHERE username = ?1 AND password = ?2", nativeQuery = true)
+  User login(String username,String password);
+  */
+}
+```
+
+**UserApiController.java**
+* session에 키값을 넣어주는 과정이 굉장히 중요함.
+```
+@PostMapping("/api/user/login")
+public ResponseDto<Integer> longin(@RequestBody User user, HttpSession session){
+    System.out.println("UserApiController : login호출됨");
+    User principal = userService.로그인(user); //principal(접근주체)
+    if(principal != null){
+        session.setAttribute("principal",principal);
+    }
+    return new ResponseDto<Integer>(HttpStatus.OK.value(), 1);
+}
+```
+
+---------------------------------------------

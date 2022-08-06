@@ -4,6 +4,9 @@ let index = {
         $("#btn-save").on("click", () => {
             this.save();
         });
+        $("#btn-login").on("click",() => {
+            this.login();
+        });
     },
     save: function() {
         //alert('user의 save함수');
@@ -30,6 +33,28 @@ let index = {
             alert(JSON.stringify(error));
         }); //ajax통신을 이용해서 3개의 파라 데이터를 json으로 변경후 insert 요청
         
+    },
+    login: function() {
+        let data = {
+            username: $("#username").val(),
+            password: $("#password").val(),
+        }
+        //console.log(data);
+        $.ajax({
+            type : "POST",
+            url : "/blog/api/user/login",
+            data : JSON.stringify(data),
+            contentType: "application/json; charset=utf-8",
+            dataType : "json",
+            //로그인 수행 요청
+        }).done(function(resp){
+            //성공시 done
+            alert("로그인 완료.")
+            location.href = "/blog";
+        }).fail(function(error){
+            //실패시 fail
+            alert(JSON.stringify(error));
+        });
     }
 }
 

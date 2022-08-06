@@ -10,11 +10,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpSession;
+
 @RestController
 public class UserApiController {
 
     @Autowired
     private UserService userService;
+
+    /*
+    @Autowired
+    HttpSession session;
+    session을 이렇게 DI 등록을 해서 사용할수 있음.
+    */
+
     @PostMapping("/api/user")
     public ResponseDto<Integer> save(@RequestBody User user){
         System.out.println("호출 ㅇㅋ");
@@ -25,5 +34,17 @@ public class UserApiController {
         return new ResponseDto<Integer>(HttpStatus.OK.value(),1); //1이면 성공 -1이면 실패
         //return 1;
         //return 1이면 ajax done의 resp값이 1이다.
+    }
+
+    @PostMapping("/api/user/login")
+    public ResponseDto<Integer> longin(@RequestBody User user, HttpSession session){
+        System.out.println("UserApiController : login호출됨");
+        User principal = userService.로그인(user); //principal(접근주체)
+
+        //세션에 키값을 넣어줘야함. 그래야 front에서 사용 가능.
+        if(principal != null){
+            session.setAttribute("principal",principal);
+        }
+        return new ResponseDto<Integer>(HttpStatus.OK.value(), 1);
     }
 }
