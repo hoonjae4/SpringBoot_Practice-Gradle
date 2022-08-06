@@ -18,7 +18,7 @@ let index = {
         //console.log(data);
         $.ajax({
             type : "POST",
-            url : "/blog/api/user",
+            url : "/api/user",
             //user라는 table에 data를 넣을것이기에 api/user까지만 적자.
             data : JSON.stringify(data), //데이터를 json으로 변경
             contentType: "application/json; charset=utf-8",
@@ -27,7 +27,7 @@ let index = {
         }).done(function(resp){
             //성공시 done
             alert("회원가입이 완료 되었습니다.")
-            location.href = "/blog";
+            location.href = "/";
         }).fail(function(error){
             //실패시 fail
             alert(JSON.stringify(error));
@@ -42,7 +42,7 @@ let index = {
         //console.log(data);
         $.ajax({
             type : "POST",
-            url : "/blog/api/user/login",
+            url : "/api/user/login",
             data : JSON.stringify(data),
             contentType: "application/json; charset=utf-8",
             dataType : "json",
@@ -50,7 +50,7 @@ let index = {
         }).done(function(resp){
             //성공시 done
             alert("로그인 완료.")
-            location.href = "/blog";
+            location.href = "/";
         }).fail(function(error){
             //실패시 fail
             alert(JSON.stringify(error));

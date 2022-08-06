@@ -36,6 +36,7 @@ public class UserApiController {
         //return 1이면 ajax done의 resp값이 1이다.
     }
 
+    /* 다른 방식으로 로그인 사용할것.
     @PostMapping("/api/user/login")
     public ResponseDto<Integer> longin(@RequestBody User user, HttpSession session){
         System.out.println("UserApiController : login호출됨");
@@ -47,4 +48,5 @@ public class UserApiController {
         }
         return new ResponseDto<Integer>(HttpStatus.OK.value(), 1);
     }
+     */
 }

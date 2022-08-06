@@ -25,7 +25,7 @@
     <button id="btn-save" class="btn btn-primary">회원가입</button>
 </div>
 <!-- static 경로는 알아서 찾아감 -->
-<script src="/blog/js/user.js"></script>
+<script src="/js/user.js"></script>
 <%@ include file="../layout/footer.jsp" %>
 
 
