@@ -26,8 +26,12 @@ public class UserService {
 
   //select만 할거라 transactional이 필요없지만
   // select할때 transaction이 시작되고, 서비스 종료시에 transaction 종료 -> 정확성 증가
+
+  /*
+  이 로그인 사용 안함
   @Transactional(readOnly = true)
   public User 로그인(User user) {
     return userRepository.findByUsernameAndPassword(user.getUsername(),user.getPassword());
   }
+   */
 }

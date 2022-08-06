@@ -1122,3 +1122,35 @@ public ResponseDto<Integer> longin(@RequestBody User user, HttpSession session){
 ```
 
 ---------------------------------------------
+## 49강 - 스프링 시큐리티로 로그인 해보자. (스프링 시큐리티 커스터마이징)
+
+security로 로그인을 함에 있어서 앞으로 ajax로 로그인을 하지 않을것이기 때문에 ajax와 관련된 코드들은 전부 지워주자.
+또한 SecurityConfig를 생성해 Spring Security를 커스터마이징 해주자
+
+** com.cos.blog.controller.config.SecurityConfig.java **
+```java
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+//아래 세 annotation은 세트이다. 자세한건 코드의 주석 참고.
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http
+            .authorizeRequests()
+              .antMatchers("/auth/**") //auth는 아무나 들어올수 있다. any matchers
+              .permitAll()
+              .anyRequest() //이외의 다르 모든 요청은
+              .authenticated()//인증이 되어야함.
+            .and()
+              .formLogin()
+              .loginPage("/auth/loginForm"); // 인증이 필요한 곳이 있다면 loginForm으로 이동하라
+  }
+}
+```
+
+** Ajax와 관련된 로그인 기능이 포함된 UserService, UserApiController,UserRepository 모두 로그인 기능은 주석처리 해주자. 또한 User.js에 있는 Ajax 로그인 함수도 주석처리 **
+
+------------------------------------------------------

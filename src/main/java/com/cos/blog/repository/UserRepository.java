@@ -13,13 +13,17 @@ import org.springframework.data.jpa.repository.Query;
 //@Repository
 
 public interface UserRepository extends JpaRepository<User,Integer> {
-  //JPA Naming 전략
-  // findByUsernameAndPassword 이 함수를 선언만 하면
-  // SELECT * FROM user WHERE username=? AND password=?, 이 상태의 쿼리가 동작을 하게 됨.
-  User findByUsernameAndPassword(String username, String password);
+
+}
+
+//JPA Naming 전략
+// findByUsernameAndPassword 이 함수를 선언만 하면
+// SELECT * FROM user WHERE username=? AND password=?, 이 상태의 쿼리가 동작을 하게 됨.
+//User findByUsernameAndPassword(String username, String password);
 
   /* 이런식으로 정의한게 위와 동일하다.
   @Query(value = "SELECT * FROM user WHERE username = ?1 AND password = ?2", nativeQuery = true)
   User login(String username,String password);
   */
-}
+
+//위 방식의 로그인도 사용 안함. security 사용할것.

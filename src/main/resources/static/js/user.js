@@ -4,9 +4,11 @@ let index = {
         $("#btn-save").on("click", () => {
             this.save();
         });
+        /*
         $("#btn-login").on("click",() => {
             this.login();
         });
+         */
     },
     save: function() {
         //alert('user의 save함수');
@@ -18,11 +20,11 @@ let index = {
         //console.log(data);
         $.ajax({
             type : "POST",
-            url : "/api/user",
+            url : "/auth/api/joinProc",
             //user라는 table에 data를 넣을것이기에 api/user까지만 적자.
             data : JSON.stringify(data), //데이터를 json으로 변경
             contentType: "application/json; charset=utf-8",
-            dataType : "json", // 요청에 대한 응답이 왔을때의 데이터가 string인데 이걸 javascript objcet로 저장
+            dataType : "json" // 요청에 대한 응답이 왔을때의 데이터가 string인데 이걸 javascript objcet로 저장
             //회원가입 수행 요청
         }).done(function(resp){
             //성공시 done
@@ -33,7 +35,8 @@ let index = {
             alert(JSON.stringify(error));
         }); //ajax통신을 이용해서 3개의 파라 데이터를 json으로 변경후 insert 요청
         
-    },
+    }
+    /*
     login: function() {
         let data = {
             username: $("#username").val(),
@@ -56,6 +59,7 @@ let index = {
             alert(JSON.stringify(error));
         });
     }
+     */
 }
 
 index.init();

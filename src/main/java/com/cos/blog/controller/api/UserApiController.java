@@ -24,7 +24,7 @@ public class UserApiController {
     session을 이렇게 DI 등록을 해서 사용할수 있음.
     */
 
-    @PostMapping("/api/user")
+    @PostMapping("/auth/joinProc")
     public ResponseDto<Integer> save(@RequestBody User user){
         System.out.println("호출 ㅇㅋ");
         //숫자를 그냥 200으로 적는것 보단
