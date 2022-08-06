@@ -1314,7 +1314,7 @@ protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 ```
 
 **PrincipalDetailService.java**
-```
+```java
 package com.cos.blog.controller.config.auth;
 
 import com.cos.blog.model.User;
