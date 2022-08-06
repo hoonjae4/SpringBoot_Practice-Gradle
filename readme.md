@@ -1133,7 +1133,7 @@ public ResponseDto<Integer> longin(@RequestBody User user, HttpSession session){
 security로 로그인을 함에 있어서 앞으로 ajax로 로그인을 하지 않을것이기 때문에 ajax와 관련된 코드들은 전부 지워주자.
 또한 SecurityConfig를 생성해 Spring Security를 커스터마이징 해주자
 
-** com.cos.blog.controller.config.SecurityConfig.java **
+**com.cos.blog.controller.config.SecurityConfig.java**
 ```java
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -1157,7 +1157,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
-** Ajax와 관련된 로그인 기능이 포함된 UserService, UserApiController,UserRepository 모두 로그인 기능은 주석처리 해주자. 또한 User.js에 있는 Ajax 로그인 함수도 주석처리 **
+**Ajax와 관련된 로그인 기능이 포함된 UserService, UserApiController,UserRepository 모두 로그인 기능은 주석처리 해주자. 또한 User.js에 있는 Ajax 로그인 함수도 주석처리**
 
 ------------------------------------------------------
 
@@ -1166,7 +1166,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 비밀번호는 보안상의 이유로 항상 암호화해서 저장되어야 한다.
 그럴때 사용하는것이 BCryptPasswordEncode이다.
 
-** com.cos.blog.controller.config.SecurityConfig.java **
+**com.cos.blog.controller.config.SecurityConfig.java**
 * 필요할때 객체를 불러와 사용하는것도 가능하겠지만 @Bean을 통해 IOC로 객체를 등록해서 사용하는게 더 편리하다
 * 이후에 사용할 곳에서 @Autowired를 작성한 후 가져와서 사용하면 된다.
 * BCryptPasswordEncoder 을 통해 password를 encode 할 수 있다.
@@ -1176,7 +1176,7 @@ public BCryptPasswordEncoder encodePWD(){
         return new BCryptPasswordEncoder();
         }
 ```
-** UserService.java **
+**UserService.java**
 * @Autowired로 IOC에 올라와 있는 객체를 그냥 이용할 수 있다.
 ```java
 @Autowired
@@ -1226,7 +1226,7 @@ spring security는 csrf 공격을 대비하기 위해 csrf token이 없는 요�
             ;
   }
 ```
-** com.cos.blog.controller.config.auth.PrincipalDetail.java **
+**com.cos.blog.controller.config.auth.PrincipalDetail.java**
 * 스프링 시큐리티에서 로그인하고 세션에 등록할때 필요한게 UserDetail type이다. 그렇기에 UserDetail을 리턴해주는 PrincipalDetail을 설정해줘야한다.
 * 스프링 시큐리티가 로그인 요청을 가로채서 로그인을 진행하고 완료가 되면 UserDetails 타입의 오브젝트를 스프링 시큐리티의 고유한 세션저장소에 저장을 한다.
 ```java
@@ -1293,8 +1293,8 @@ public class PrincipalDetail implements UserDetails {
 }
 ```
 
-** 스프링 시큐리티가 로그인을 가로채서 대신 로그인을 할 때 Password가 어떻게 해쉬화 되었는지를 알아야 복호화를 할수 있다.**
-** 따라서 이를 지정해주는 PrincipalDetailService도 필요하다 **
+**스프링 시큐리티가 로그인을 가로채서 대신 로그인을 할 때 Password가 어떻게 해쉬화 되었는지를 알아야 복호화를 할수 있다.**
+**따라서 이를 지정해주는 PrincipalDetailService도 필요하다**
 
 **SecurityConfig.java**
 * 스프링에서 제공하는 configure(AuthenticationManagerBuilder) 를 불러와 오버라이딩 해줘야 한다.
