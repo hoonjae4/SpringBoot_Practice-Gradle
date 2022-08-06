@@ -282,7 +282,7 @@ Controller -> 응답을 html로
 * ##### GET 요청
     * 인터넷 브라우저에서는 쿼리스트링 즉 주소 뒤에 ?id=1&username=asd 이런식의 요청밖에 다룰수 없으며, Controller 매개변수에 클래스 혹은 String parameter로 받아오면 된다. 다만, String으로 받아오는 경우에는 @RequestParam String Text 형태의 매개변수를 쿼리스트링으로 받아오는 갯수만큼 선언해줘야 하기 때문에 코드가 깔끔하지 못하다. 그렇기에 이번 예제에서는 Member라는 클래스를 생성해 깔끔하게 받아옴
 
-  ```
+  ```java
    public String getTest(Member m) {
       return "get 요청 : " + m.getId() + " , " + m.getUsername();
   }
@@ -292,7 +292,7 @@ Controller -> 응답을 html로
 * POST요청은 데이터를 쿼리스트링이 아닌 body라는 곳에 담아서 보낸다.
 * 이 방식은 3가지 정도로 나뉠수 있다 (더 많음)
 * 1. form 태그로 받아오는 데이터
-      ```
+      ```java
       public String postTest(Member m) {
           return "post 요청 : " + m.getId() + " , " + m.getUsername();
       }
@@ -301,14 +301,14 @@ Controller -> 응답을 html로
 
 * 2. Text 타입 -> Text를 있는 그대로 출력
 
-```
+```java
 public String postTest(@RequestBody String text) {
     return "post 요청 : " + text;
 }
 ```
 
 * 3. JSON 타입 -> 스프링의 MessageConverter가 자동으로 클래스에 선언된 변수에 맞게 매핑해준다
-```
+```java
 public String postTest(@RequestBody Member m) {
     return "post 요청 : " + m.getId() + " , " + m.getUsername();
 }
@@ -347,25 +347,30 @@ repository\org\projectlombook\lombook\버전 -> jar파일 cmd로 실행(git bash
 **롬북을 이용하면 @Getter,@Setter를 이용해 getter,setter를 쉽게 생성 가능하고, 둘 다 생성하고 싶으면 @Data를 이용하자.**
 **@AllArgsConstructor -> 생성자**
 
-  `Member m = new Member(1,"asd","asdasd","asdasdasd@asd.asd");
+  ```java
+  Member m = new Member(1,"asd","asdasd","asdasdasd@asd.asd");
   Member m = Member.builder().username("ssar").password("asdasd").email("aaa@naaa.aaa").build();
   System.out.println(TAG + "getter : "+ m.getId());
   m.setId(5000);
-  System.out.println(TAG + "setter : "+ m.getId());`
+  System.out.println(TAG + "setter : "+ m.getId());
+  ```
 
 **@builder를 이용하면 객체 생성시 원하는 필드를 직접 입력해 가져올수 있음.** 
   
   Member.java
-  `@Builder
+  ```java
+  @Builder
   public Member(String username, String password, String email) {
   this.username = username;
   this.password = password;
   this.email = email;
-  }`
+  }
+  ```
 
-  BlogApplication.java
-  `
-  Member m = Member.builder().username("ssar").password("asdasd").email("aaa@naaa.aaa").build();`
+  **BlogApplication.java**
+  ```java
+  Member m = Member.builder().username("ssar").password("asdasd").email("aaa@naaa.aaa").build();
+  ```
   -----------------------------------
 
 ## 17강. yml 설정
@@ -446,7 +451,7 @@ fail-on-empty-beans: false`
 ## 18. user 테이블 생성
 
 ORM -> JAVA(다른언어) Object -> 테이블로 매핑해주는 기술 (JPA의 기술)
-```
+```java
 package com.cos.blog.model;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -485,17 +490,17 @@ public class User {
 **한 User가 여러개의 Board를 작성할 수 있으므로 Board의 테이블을 설정할때 User를 Foreign key로 갖도록 설정하자.**
 **Reply도 Board와 Many to one, User와 Many to one 을 형성하도롱 설정하자**
 
-Board.java
+**Board.java**
 
-```
+```java
 @ManyToOne // board가 many, user는 one ->한 명의 유저는 여러 글을 쓸 수 있다.
 @JoinColumn(name="userId")
 private User user; //글을 적은 사람. DB는 오브젝트를 저장할수 없기때문에 foreign key를 사용하지만, java에서는 오브젝트를 저장할수 있음.
 // 그러나 이러면 db에서 충돌이 나지 않는가? -> JPA ORM을 사용하면 이를 자동으로 해결해줌. 자동으로 foreignkey로 인식
 ```
 
-Reply.java
-```
+**Reply.java**
+```java
     @ManyToOne
     @JoinColumn(name="boardId")
     private Board board;
@@ -540,19 +545,19 @@ Annotation에 의존하는건 좋지 않음.
   그래서 직접 수정하기로 함.
   아래의 예제와는 다르게 if문을 이용해서 null이면 default값으로 빼주는 형태로 만들수도 있음.
   
-  DummyController.java 
-  ```
+  **DummyController.java** 
+  ```java
   user.setRole(RoleType.USER);
   ```
   
-  User.java
-  ```
+  **User.java**
+  ```java
   @Enumerated(EnumType.STRING) //이 field의 enumtype은 string이다.
   private RoleType role;
   ```
   
-  RoleType.java
-  ```
+  **RoleType.java**
+  ```java
   package com.cos.blog.model;
 
   public enum RoleType{
@@ -569,7 +574,7 @@ Annotation에 의존하는건 좋지 않음.
 
 ## 26 - id로 select
 
-```
+```java
 public User detail(@PathVariable int id) {
 //findById는 optional return이기 때문에 null인지 아닌지 판단을 하기도 해야함.
 //findById.get()은 그냥 바로 user 객체 return -> null이 절대 나올수 없는 상황에서만 사용
@@ -610,7 +615,7 @@ public User detail(@PathVariable int id) {
 
   먼저 전체 select는 간단하니 코드만 보고 가자
 
-  ```
+  ```java
   @GetMapping("/dummy/user")
       public List<User> list(){
           return userRepository.findAll();
@@ -619,7 +624,7 @@ public User detail(@PathVariable int id) {
   간단한 소스코드이다. repository를 이용해 findall을 해주면 전체 select가 된다
 
   페이징은 annotation을 이용해서 진행한다
-  ```
+  ```java
     @GetMapping("/dummy/user/page{id}")
     public Page<User> pageList(@PageableDefault(size=2,sort="id",direction = Sort.Direction.DESC) Pageable pageable){
         Page<User> users = userRepository.findAll(pageable);
@@ -633,7 +638,7 @@ public User detail(@PathVariable int id) {
   
   그러나, return값이 Page객체이기때문에 필요한 content 영역 외의 값인 page객체의 요소들이 추가로 출력이 될 수 있다. 이를 예방하기 위해 return값을 List로 바꾸고
   getcontent method를 이용해 user content만 return을 해줄수 있다
-  ```
+  ```java
     @GetMapping("/dummy/user")
     public List<User> pageList(@PageableDefault(size=2,sort="id",direction = Sort.Direction.DESC) Pageable pageable){
         List<User> users = userRepository.findAll(pageable).getContent();
@@ -641,7 +646,7 @@ public User detail(@PathVariable int id) {
     }
   ```
   
-  ```
+  ```java
     @GetMapping("/dummy/user")
     public List<User> pageList(@PageableDefault(size=2,sort="id",direction = Sort.Direction.DESC) Pageable pageable){
         Page<User> pagingUser = userRepository.findAll(pageable);
@@ -662,7 +667,7 @@ Update시에는 Repository의 save method를 이용함.
 save는 insert에 이용하는데, 만일 DB에 이미 존재하는 id가 있다면 update를 해줌.
 그러나, 지정하지 않은 다른 field의 값은 null로 바뀌는 현상이 생기는데, 이를 예방하기 위해 put요청시 받아온 id값을 통해 객체를 찾고, 필요한 부분만 수정해 save를 해주는 형태로 사용함
 
-```
+```java
 @PutMapping("/dummy/user/{id}")
     public User updateUser(@PathVariable int id, @RequestBody User requestUser){
         requestUser.setId(id);
@@ -677,7 +682,8 @@ save는 insert에 이용하는데, 만일 DB에 이미 존재하는 id가 있다
 ```
 
 @Transactional annotation을 통해 save가 없이도 데이터가 update되게끔 만들수 있는데 이를 '더티체킹' 이라고함.
-```DummyControllerTest.java
+**DummyControllerTest.java**
+```java
 @Transactional
 @PutMapping("/dummy/user/{id}")
     public User updateUser(@PathVariable int id, @RequestBody User requestUser){
@@ -712,7 +718,7 @@ JPA에서는 트랜잭션이 끝나는 시점에 변화가 있는 모든 엔티�
 Repository의 deleteById를 이용해 데이터를 삭제할때, 그냥 삭제 해버리면 존재하지 않거나, 잘못 매칭된 값을 삭제하는 경우가 있으니
 try catch를 통해 분기를 해주도록 하자.
 
-```
+```java
   @DeleteMapping("/dummy/user/{id}")
     public String delete(@PathVariable int id){
         try {
@@ -731,7 +737,7 @@ try catch를 통해 분기를 해주도록 하자.
 Exception을 처리할때 그냥 IllegalArgumentException과 같은 화면을 그냥 다 출력하는건 크게 의미가 없다.
 그래서 우리는 Exception handler를 따로 만들어서 handling 해주면 된다.
 
-```
+```java
 package com.cos.blog.handler;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -769,8 +775,8 @@ import org.springframework.web.bind.annotation.RestController;
    스프링 컨트롤러는 key=value를 자동으로 변수에 담아줌.
    그래서 key=value형태는 변수 Controller(String username, String email)등으로 받을수 있음
    이 때 해당 object에 setter가 없으면 불가능.
-   ```
-   public STring home(User user) {
+   ```java
+   public String home(User user) {
         return "home";
    } 
     ```
@@ -795,7 +801,7 @@ static/js 에 정적인 자바스크립트 소스파일을 두자.
 ## 38강 - Ajax요청 쏘기
 
 **controller/Dto/ResponseDto.java**
-```aidl
+```java
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -807,7 +813,7 @@ static/js 에 정적인 자바스크립트 소스파일을 두자.
 ```
 
 **controller/apt/UserApiController.java**
-```
+```java
     package com.cos.blog.controller.api;
     
     import com.cos.blog.controller.dto.ResponseDto;
@@ -832,7 +838,7 @@ static/js 에 정적인 자바스크립트 소스파일을 두자.
 
 ```
 **resources/static/js/user.js**
-```
+```javascript
     let index = {
         init: function() {
             $("#btn-save").on("click", () => {
@@ -880,7 +886,7 @@ Service를 이용하는 이유는 **트랜젝션을 관리하기 위해서임. �
 
 **com.cos.blog.Service.UserService.java**
 * @Service를 통해 bean에 등록해주고, 사용시 @Autowired를 통해 의존성을 주입하고 사용하자.
-```
+```java
     package com.cos.blog.service;
     
     import com.cos.blog.model.User;
@@ -917,7 +923,7 @@ Service를 이용하는 이유는 **트랜젝션을 관리하기 위해서임. �
 
 **com.cos.blog.controller.api.UserApiController.java**
 * Service를 통해 트랜젝션을 관리하면 코드가 깔끔하고, 가독성도 좋아진다.
-```
+```java
     @RestController
     public class UserApiController {
     
@@ -942,7 +948,7 @@ Service를 이용하는 이유는 **트랜젝션을 관리하기 위해서임. �
 그래서 우리는 이 try catch를 지우고, GloablExceptionHandler를 이용하기로 했다.
 
 **com.cos.blog.Service.UserService.java**
-```
+```java
 public int 회원가입(User user) {
     userRepository.save(user);
     return 1;
@@ -951,7 +957,7 @@ public int 회원가입(User user) {
 
 **com.cos.blog.handler.GlobalExceptionHandler.java**
 * 상태의 값을 표현해 주는 것이 더 좋기 때문에 type을 string으로 바꾸고 e.getMessage()를 넣어주어 오류를 받도록 하였다.
-```
+```java
 public ResponseDto<String> handleArgumentException(IllegalArgumentException e) {
             return new ResponseDto<String>(HttpStatus.INTERNAL_SERVER_ERROR.value(),e.getMessage());
         }
@@ -959,7 +965,7 @@ public ResponseDto<String> handleArgumentException(IllegalArgumentException e) {
 
 **com.cos.blog.controller.api.UserApiController.java**
 * 따로 Exception을 다루지 않아도 userService.회원가입 method에서 발생한 Exception이 자동으로 GlobalExceptionHandler로 이동한다.
-```
+```java
 public ResponseDto<Integer> save(@RequestBody User user){
         System.out.println("호출 ㅇㅋ");
         user.setRole(RoleType.USER);
@@ -970,7 +976,7 @@ public ResponseDto<Integer> save(@RequestBody User user){
 
 **com.cos.blog.Dto.ResponseDto.java**
 * 반환타입을 inteager로 바꿧기 때문에 status또한 int로 바꿔준다.
-```
+```java
 public class ResponseDto<T> {
     int status;
     T data;
@@ -990,7 +996,7 @@ public class ResponseDto<T> {
 
 **layout/loginForm.jsp**
 * Ajax를 이용할 것이기 때문에 버튼을 밖으로 빼줌
-```
+```html
 <div class="container">
     <form>
         <div class="form-group">
@@ -1013,7 +1019,7 @@ public class ResponseDto<T> {
 
 **static/js/user.js**
 * 회원가입과 동일하게 ajax 요청 보냄.
-```
+```javascript
 init: function() {
         $("#btn-save").on("click", () => {
             this.save();
@@ -1023,7 +1029,7 @@ init: function() {
         });
     }
 ```
-```
+```javascript
 login: function() {
         let data = {
             username: $("#username").val(),
@@ -1055,7 +1061,7 @@ login: function() {
 ```
 * jstl 문법을 이용해 로그인 분기
   * c:choose : 시작, c:when : if, c:otherwise : else
-```
+```html
 <c:choose>
     <c:when test =  "${empty sessionScope.principal}">
         <ul class="navbar-nav">
@@ -1085,7 +1091,7 @@ login: function() {
 
 **UserService.java**
 * select만 하는 작업이라 Transactional이 필요없지만 정확성 증가를 위해 사용함.
-```
+```java
 @Transactional(readOnly = true)
   public User 로그인(User user) {
     return userRepository.findByUsernameAndPassword(user.getUsername(),user.getPassword());
@@ -1096,7 +1102,7 @@ login: function() {
 * JPA Naming 전략
 * findByUsernameAndPassword 이 함수를 선언만 하면
 * SELECT * FROM user WHERE username=? AND password=?, 이 상태의 쿼리가 동작을 하게 됨.
-```
+```java
 public interface UserRepository extends JpaRepository<User,Integer> {
   User findByUsernameAndPassword(String username, String password);
 
@@ -1109,7 +1115,7 @@ public interface UserRepository extends JpaRepository<User,Integer> {
 
 **UserApiController.java**
 * session에 키값을 넣어주는 과정이 굉장히 중요함.
-```
+```java
 @PostMapping("/api/user/login")
 public ResponseDto<Integer> longin(@RequestBody User user, HttpSession session){
     System.out.println("UserApiController : login호출됨");
