@@ -1200,3 +1200,158 @@ spring security는 csrf 공격을 대비하기 위해 csrf token이 없는 요�
 나중에 서비스 완성시 csrf token을 날리면서 요청을 해주면 된다.
 
 ------------------------------------------------------
+## 52강 - 스프링 시큐리티 로그인 구현
+
+스프링 시큐리티를 사용하면 Controller에서 login controller를 구현하지 않아도 된다.
+
+**SecurityConfig.java**
+* loginPage를 통해 권한이 필요한 곳에 로그인이 안되있다면 자동으로 로그인 페이지로 이동하게 만들고
+* loginProcessingUrl을 통해 Post요청을 받을 url을 지정해준다
+* 로그인 성공시 defaultsuccessful로 지정된 url로 이동하며, 실패시 fail로 설정할순 있지만 따로 다루진 않는다.
+```java
+@Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http
+            .csrf().disable() //csrf 토큰 비활성화 테스트시 넣어주자.
+            .authorizeRequests()
+              .antMatchers("/","/auth/**","/js/**","/css/**","/image/**") //auth는 아무나 들어올수 있다. any matchers
+              .permitAll()
+              .anyRequest() //이외의 다르 모든 요청은
+              .authenticated()//인증이 되어야함.
+            .and()
+              .formLogin()
+              .loginPage("/auth/loginForm") // 인증이 필요한 곳이 있다면 loginForm으로 이동하라
+              .loginProcessingUrl("/auth/loginProc")
+              .defaultSuccessUrl("/")//여기 process를 살펴보면, 인증이 되지 않으면 로그인으로 가라. 로그인 post요청은 auth/loginProC로 가라. 그리고 성공하면 메인으로 이동하라.
+            ;
+  }
+```
+** com.cos.blog.controller.config.auth.PrincipalDetail.java **
+* 스프링 시큐리티에서 로그인하고 세션에 등록할때 필요한게 UserDetail type이다. 그렇기에 UserDetail을 리턴해주는 PrincipalDetail을 설정해줘야한다.
+* 스프링 시큐리티가 로그인 요청을 가로채서 로그인을 진행하고 완료가 되면 UserDetails 타입의 오브젝트를 스프링 시큐리티의 고유한 세션저장소에 저장을 한다.
+```java
+package com.cos.blog.controller.config.auth;
+
+
+import com.cos.blog.model.User;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+public class PrincipalDetail implements UserDetails {
+  private final User user; //객체를 품고 있는것 -> composition
+
+  public PrincipalDetail(User user){
+    this.user = user;
+  }
+  @Override
+  public String getPassword() {
+    return user.getPassword();
+  }
+
+  @Override
+  public String getUsername() {
+    return user.getUsername();
+  }
+
+  //계정이 만료되지 않았는지 리턴 (true 만ㅇ료되지 않음)
+  @Override
+  public boolean isAccountNonExpired() {
+    return true;
+  }
+
+  //true로 해야 안잠긴상태
+  @Override
+  public boolean isAccountNonLocked() {
+    return true;
+  }
+
+  //비밀번호 만료 여부. true가 만료안됨.
+  @Override
+  public boolean isCredentialsNonExpired() {
+    return true;
+  }
+
+  //게정 활성화가 되어있는지. true가 활성화
+  @Override
+  public boolean isEnabled() {
+    return true;
+  }
+
+  //계정의 권한을 리턴하는 함수. 권한이 여러개면 포문 돌려야함.
+  @Override
+  public Collection<? extends GrantedAuthority> getAuthorities() {
+
+    Collection<GrantedAuthority> collectors = new ArrayList<>();
+    collectors.add(()->{
+        return "ROLE_"+user.getRole();
+    });
+    return collectors;
+  }
+}
+```
+
+** 스프링 시큐리티가 로그인을 가로채서 대신 로그인을 할 때 Password가 어떻게 해쉬화 되었는지를 알아야 복호화를 할수 있다.**
+** 따라서 이를 지정해주는 PrincipalDetailService도 필요하다 **
+
+**SecurityConfig.java**
+* 스프링에서 제공하는 configure(AuthenticationManagerBuilder) 를 불러와 오버라이딩 해줘야 한다.
+```java
+@Bean //IOC가 됨. 필요할때마다 가져와서 쓰면 되는것.
+public BCryptPasswordEncoder encodePWD(){
+        return new BCryptPasswordEncoder();
+        }
+        
+@Autowired
+private PrincipalDetailService principalDetailService;
+@Override
+protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(principalDetailService).passwordEncoder(encodePWD());
+        //로그인 할 때 패스워드를 어떻게 인코드 했는지 식별해서 비교해줌.
+        }
+```
+
+**PrincipalDetailService.java**
+```
+package com.cos.blog.controller.config.auth;
+
+import com.cos.blog.model.User;
+import com.cos.blog.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service //Bean등록
+public class PrincipalDetailService implements UserDetailsService {
+
+  @Autowired
+  public UserRepository userRepository;
+
+  //스프링이 로그인을 가로챌때 username과 password라는 변수 두 개를 가로채는데,
+  // password 가 틀린 부분 처리는 알아서 하기 때문에 해당 username이 db에 있는지만 확인해서 리턴 해주면 된다.
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    User principal = userRepository.findByUsername(username)
+            .orElseThrow(()->{
+              return new UsernameNotFoundException("해당 사용자를 찾을수 없음 : " +username);
+            });
+    return new PrincipalDetail(principal); //이때 시큐리티 세션에 유저 정보가 저장이 됨.
+  }
+}
+```
+
+**또한 우리는 userRepository에 findByUsername이라는 method가 없기 때문에 지정해 줘야 한다.**
+**UserRepository.java**
+```java
+public interface UserRepository extends JpaRepository<User,Integer> {
+  // SELECT * FROM user WHERE username=? 으로 동작함.
+  Optional<User> findByUsername(String username);
+}
+```
+
+이렇게 스프링 시큐리티를 이용해 로그인/로그아웃 동작을 수행할 수 있다.
+--------------------------------------------------------------------------

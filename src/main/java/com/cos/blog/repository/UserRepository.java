@@ -4,6 +4,8 @@ import com.cos.blog.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 //UserRepository는 User table을 관리하는 Repository이다.
 // User table의 primary key는 숫자다 라는것이 <User,Integer>
 // JpaRepository에는 find, save, delete, select 등등 여러가지 메소드를 제공
@@ -13,7 +15,8 @@ import org.springframework.data.jpa.repository.Query;
 //@Repository
 
 public interface UserRepository extends JpaRepository<User,Integer> {
-
+  // SELECT * FROM user WHERE username=? 으로 동작함.
+  Optional<User> findByUsername(String username);
 }
 
 //JPA Naming 전략

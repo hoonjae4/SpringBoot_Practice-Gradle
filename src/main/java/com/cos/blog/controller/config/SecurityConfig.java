@@ -1,7 +1,10 @@
 package com.cos.blog.controller.config;
 
+import com.cos.blog.controller.config.auth.PrincipalDetailService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,6 +24,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   public BCryptPasswordEncoder encodePWD(){
     return new BCryptPasswordEncoder();
   }
+
+  //시큐리티가 대신 로그인 할때 password를 가로채는데 해당 password가 어떻게 해시가 되어서 회원가입이 되었는지 알아야 같은 해시로 암호화해서 db에 있는 해시랑 비교할수 있음.
+  @Autowired
+  private PrincipalDetailService principalDetailService;
+  @Override
+  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    auth.userDetailsService(principalDetailService).passwordEncoder(encodePWD());
+    //로그인 할 때 패스워드를 어떻게 인코드 했는지 식별해서 비교해줌.
+  }
+
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
@@ -32,6 +45,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
               .authenticated()//인증이 되어야함.
             .and()
               .formLogin()
-              .loginPage("/auth/loginForm"); // 인증이 필요한 곳이 있다면 loginForm으로 이동하라
+              .loginPage("/auth/loginForm") // 인증이 필요한 곳이 있다면 loginForm으로 이동하라
+              .loginProcessingUrl("/auth/loginProc")
+              .defaultSuccessUrl("/")//여기 process를 살펴보면, 인증이 되지 않으면 로그인으로 가라. 로그인 post요청은 auth/loginProC로 가라. 그리고 성공하면 메인으로 이동하라.
+            ;
   }
 }
