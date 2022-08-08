@@ -30,7 +30,6 @@ public class Board {
     @Lob //대용량 데이터 저장시 씀
     private String content; //섬머노트 라이브러리 html태그가 섞여서 디자인됨. 내용이 엄청 길어질수 있음
 
-    @ColumnDefault("0") // 여기서는 int이기 때문에 홀따옴표 필요없음.
     private int count; // 조회수
 
     @ManyToOne // board가 many, user는 one ->한 명의 유저는 여러 글을 쓸 수 있다.
@@ -49,5 +48,8 @@ public class Board {
     //@JoinColumn(name="replyId") -> 필요가 없음. forein key까지 가지게 되면 하나의 row에는 하나의 값만을 가지는 데이터베이스의 특성(원자성)상
     //board하나에 100개의 reply가 있다고 가정했을때 그 db의 크기는 매우 커지게 됨.
     private List<Reply> reply; //하나의 게시글은 여러개의 reply가 필요함 그래서 여러개를 담을 List를 가져옴
+
+
+    //Reply는 mapped라고 되있으니 데이터베이스에 있는 값이 아니므로 save시 넣어줄 필요가 없음. 나중에 select하기 위해 있는것.
 
 }
