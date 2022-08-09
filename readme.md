@@ -1470,6 +1470,49 @@ public List<Board> 글목록(){
 
 ```jsp
 <c:forEach var="board" items="${boards}">
+    <div class="card m-2">
+        <div class="card-body">
+            <h4 class="card-title">${board.title}</h4>
+            <a href="#" class="btn btn-primary">상세 보기</a>
+        </div>
+    </div>
+</c:forEach>
+```
+
+------------------------------------------
+
+## 55강 - 글 목록 페이징 하기
+
+페이징을 하기 위해서는 spring에서 제공하는 Pageable 객체를 이용한다. Pageable 객체에는 page정보와, data정보가 따로 담겨져 있으니, 원하는 정보를 얻기 위해선 getContent()를 이용해야한다.
+
+**BoardController.java**
+
+* @PageableDefault로 페이징할 갯수, 정렬 기준, 오름차순인지 내림차순인지 정해 주면 된다.
+
+```java
+@GetMapping({"","/"})
+    public String index(Model model, @PageableDefault(size = 3,sort = "id",direction = Sort.Direction.DESC) Pageable pageable) {
+        model.addAttribute("boards",boardService.글목록(pageable));
+        return "index";
+    }
+```
+
+**BoardService.java**
+
+```java
+public Page<Board> 글목록(Pageable pageable){
+    return boardRepository.findAll(pageable);
+  }
+```
+
+**index.jsp**
+
+* jstl 문법을 이용해 Page 객체 데이터를 받아온 boards에서 그 page값이 first인지 last인지에 따라 버튼을 활성화/비활성화 해준다.
+
+```jsp
+<div class ="container">
+    <!-- jstl의 en표현식, request 받을때 boards가 날라옴. -->
+    <c:forEach var="board" items="${boards.content}">
         <div class="card m-2">
             <div class="card-body">
                 <h4 class="card-title">${board.title}</h4>
@@ -1477,7 +1520,28 @@ public List<Board> 글목록(){
             </div>
         </div>
     </c:forEach>
+    <ul class="pagination justify-content-center">
+        <c:choose>
+            <c:when test="${boards.first}">
+                <li class="page-item disabled"><a class="page-link" href="?page=${boards.number-1}">Previous</a></li>
+            </c:when>
+            <c:otherwise>
+                <li class="page-item"><a class="page-link" href="?page=${boards.number-1}">Previous</a></li>
+            </c:otherwise>
+        </c:choose>
+        <c:choose>
+            <c:when test="${boards.last}">
+                <li class="page-item disabled"><a class="page-link" href="?page=${boards.number+1}">Next</a></li>
+            </c:when>
+            <c:otherwise>
+                <li class="page-item"><a class="page-link" href="?page=${boards.number+1}">Next</a></li>
+            </c:otherwise>
+        </c:choose>
+    </ul>
+</div>
 ```
 
-------------------------------------------
+
+
+--------------------------------
 
