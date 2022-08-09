@@ -1545,3 +1545,68 @@ public Page<Board> 글목록(Pageable pageable){
 
 --------------------------------
 
+## 56강 - 글 상세보기
+
+상세보기는 어렵지 않다. 이전에서 사용했던 findById를 통해 글을 찾고, 불러오면 된다.
+
+**BoardService.java**
+
+```java
+public Board 글상세보기(int id){
+    return boardRepository.findById(id).orElseThrow(()->{
+    return new IllegalArgumentException("글 상세보기 : 아이디 찾기 실패.");
+    });
+}
+```
+
+**BoardController.java**
+
+* /board/{id} -> 쿼리스트링 -> @PathVariable로 받아오기 필요.
+
+```java
+@GetMapping("/board/{id}")
+    public String fintByID(@PathVariable int id,Model model){
+        model.addAttribute("board", boardService.글상세보기(id));
+        return "board/detail";
+ 	}
+```
+
+**index.jsp**
+
+* 현재 board의 id를 쿼리스트링으로 넘겨주자
+
+```jsp
+<a href="/board/${board.id}" class="btn btn-primary">상세 보기</a>
+```
+
+
+
+**detail.jsp**
+
+```jsp
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+
+<%@ include file="../layout/header.jsp" %>
+
+<div class="container">
+    <button class="btn btn-secondary" onclick="history.back()">돌아가기</button>
+    <button id="btn-update" class="btn btn-warning">수정</button>
+    <button id="btn-delete" class="btn btn-danger">삭제</button>
+    <br/><br/>
+    <div class="form-group">
+        <h3>${board.title}</h3>
+    </div>
+    <hr>
+    <div class="form-group">
+        <div>
+            ${board.content}
+        </div>
+    </div>
+    <hr>
+</div>
+<script src="/js/board.js"></script>
+<%@ include file="../layout/footer.jsp" %>
+```
+
+--------------------
+
