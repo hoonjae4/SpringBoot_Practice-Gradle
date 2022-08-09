@@ -58,13 +58,10 @@
 .
 2^8 -> 256가지
 
-> 2^8 = 8 bit = 1 byte
->
->> 만일 1byte로 문자를 표현한다 -> 한글(1byte), 중국어(3byte)와 같은 문자 깨짐.
->>
->>> 그래서 3byte를 전세계 표준으로 이용하고, 이를 UTF-8이라 부름.
->>>
->>
+	*2^8 = 8 bit = 1 byte
+	
+	*만일 1byte로 문자를 표현한다 -> 한글(1byte), 중국어(3byte)와 같은 문자 깨짐.
+	*그래서 3byte를 전세계 표준으로 이용하고, 이를 UTF-8이라 부름.
 
 ---
 
@@ -218,12 +215,13 @@ database:
 #### 여기서 나는 porm.xml에서 maven plug in 오류가 발생해. db를 정상적으로 연결할수 없는 상태에 빠졌다.
 
 #### 이를 해결하기 위해 의존성 패치를 추가로 해주었다
-
+```text
 <dependency>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-resources-plugin</artifactId>
     <version>2.4.3</version>
 </dependency>
+```
 #### 그리고 프로젝트 우클릭 -> run as -> maven install
 
 #### 이클립스 새로고침(F5)
@@ -1434,3 +1432,52 @@ public class BoardService {
 public interface BoardRepository extends JpaRepository<Board ,Integer> {
 }
 ```
+
+-----------------------------------------------------
+
+## 54강 - 글목록 보기
+
+글쓰기를 완료했으니, index에 글 목록을 가져와보자.
+
+글 목록을 가져올때 핵심적인 방식이 viewResolver의 특성을 이용해 view에 데이터를 넘겨주는 것이다
+
+**BoardController.java**
+
+* 여기서 model은 일반적인 request의 역할을 수행하고, boardService의 글목록 함수의 return값을 boards라는 변수명에 담아서 보내줌.
+
+```java
+    @GetMapping({"","/"})
+    public String index(Model model) {
+        model.addAttribute("boards",boardService.글목록());
+        return "index"; //viewResolver가 작동해서, 해당 view에 정보가 전송이됨.
+    }
+```
+
+**BoardService.java**
+
+* 글목록은 간단하게 finAll을 리턴.
+* 단순히 select만 하는 것이기 때문에 Transactional 필요없음.
+
+```java
+public List<Board> 글목록(){
+    return boardRepository.findAll();
+  }
+```
+
+**index.jsp**
+
+* jstl의 기초 문법을 이용해 받아온 request를 출력하자.
+
+```jsp
+<c:forEach var="board" items="${boards}">
+        <div class="card m-2">
+            <div class="card-body">
+                <h4 class="card-title">${board.title}</h4>
+                <a href="#" class="btn btn-primary">상세 보기</a>
+            </div>
+        </div>
+    </c:forEach>
+```
+
+------------------------------------------
+
