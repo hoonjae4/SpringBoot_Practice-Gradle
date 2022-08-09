@@ -1610,3 +1610,70 @@ public Board 글상세보기(int id){
 
 --------------------
 
+## 57강 - 글 삭제하기
+
+**detail.jsp**
+
+* 세션에 있는 사용자와 글 작성자가 다르면 삭제 버튼이 보이면 안된다. 그래서 c:if문을 통해 세션과 board의 사용자를 체크해준다
+* 이 방법은 프론트 단에서만 가능하고, 콘솔에서 함수 조작으로 삭제시킬수 있으므로, 서비스의 글 삭제하기에서 Principal의 user와 board의 user를 비교 후 삭제하는 함수를 추가해줘야 된다. 귀찮아서 안함.
+
+```
+<c:if test="${board.user.id == principal.user.id}"><button id="btn-delete" class="btn btn-danger">삭제</button></c:if>
+    <br/><br/>
+    <div>
+        글 번호 : <span id="boardId"><i>${board.id}</i></span>
+        작성자  : <span><i>${board.user.username}</i></span>
+    </div>
+    <br/>
+```
+
+**board.js**
+
+* 똑같이 Ajax를 사용해서 delete요청 처리. 
+
+```
+$("#btn-delete").on("click",()=>{
+            this.deleteById();
+        });
+```
+
+```
+deleteById : function(){
+        var id = $("#boardId").text();
+        $.ajax({
+            type:"DELETE",
+            url:"/api/board/"+id,
+            dataType: "json"
+        }).done(function(resp){
+            alert("삭제 완료");
+            location.href="/";
+        }).fail(function(error){
+            alert(JSON.stringify(error));
+            console.log(JSON.stringify(error));
+        })
+    }
+```
+
+**BoardService**
+
+* 삭제함수는 간단하지만, 위에서 언급했듯, 보안상의 문제도 신경써야하니 principal에 등록된 session 객체와 board의 user가 다르면 삭제가 불가능하게끔 만들어 주긴 해야한다.
+
+```
+@Transactional
+  public void 글삭제하기(int id){
+    boardRepository.deleteById(id);
+  }
+```
+
+**BoardApiController.java**
+
+```
+@DeleteMapping("/api/board/{id}")
+  public ResponseDto<Integer> deleteById(@PathVariable int id){
+    boardService.글삭제하기(id);
+    return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
+  }
+```
+
+----------------------------------
+
