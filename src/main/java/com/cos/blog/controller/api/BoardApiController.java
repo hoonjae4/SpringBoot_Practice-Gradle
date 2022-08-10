@@ -29,4 +29,12 @@ public class BoardApiController {
     boardService.글삭제하기(id);
     return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
   }
+
+  @PutMapping("/api/board/{id}")
+  public ResponseDto<Integer> update(@PathVariable int id, @RequestBody Board board){
+    System.out.println("수정하기 컨트롤러 호출.");
+    boardService.글수정하기(id,board);
+    System.out.println("수정하기 끝남.");
+    return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
+  }
 }

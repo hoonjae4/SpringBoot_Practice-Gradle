@@ -7,6 +7,9 @@ let index = {
         $("#btn-delete").on("click",()=>{
             this.deleteById();
         });
+        $("#btn-update").on("click",()=>{
+            this.updateById();
+        });
     },
     save: function() {
         let data = {
@@ -28,7 +31,7 @@ let index = {
         });
     },
     deleteById : function(){
-        var id = $("#boardId").text();
+        let id = $("#boardId").text();
         $.ajax({
             type:"DELETE",
             url:"/api/board/"+id,
@@ -40,7 +43,28 @@ let index = {
             alert(JSON.stringify(error));
             console.log(JSON.stringify(error));
         })
-    }
+    },
+    updateById: function() {
+        let id = $("#updateId").val();
+        let data = {
+            title: $("#title").val(),
+            content: $("#content").val(),
+        }
+        console.log(id,data);
+        $.ajax({
+            type : "PUT",
+            url : "/api/board/"+id,
+            data : JSON.stringify(data),
+            contentType: "application/json; charset=utf-8",
+            dataType : "json"
+        }).done(function(resp){
+            alert("글 수정 완료.")
+            location.href = "/";
+        }).fail(function(error){
+            alert(JSON.stringify(error));
+            console.log(JSON.stringify(error));
+        });
+    },
 }
 
 index.init();

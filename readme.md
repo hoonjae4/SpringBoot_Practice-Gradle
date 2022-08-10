@@ -1617,7 +1617,7 @@ public Board 글상세보기(int id){
 * 세션에 있는 사용자와 글 작성자가 다르면 삭제 버튼이 보이면 안된다. 그래서 c:if문을 통해 세션과 board의 사용자를 체크해준다
 * 이 방법은 프론트 단에서만 가능하고, 콘솔에서 함수 조작으로 삭제시킬수 있으므로, 서비스의 글 삭제하기에서 Principal의 user와 board의 user를 비교 후 삭제하는 함수를 추가해줘야 된다. 귀찮아서 안함.
 
-```
+```jsp
 <c:if test="${board.user.id == principal.user.id}"><button id="btn-delete" class="btn btn-danger">삭제</button></c:if>
     <br/><br/>
     <div>
@@ -1631,13 +1631,13 @@ public Board 글상세보기(int id){
 
 * 똑같이 Ajax를 사용해서 delete요청 처리. 
 
-```
+```javascript
 $("#btn-delete").on("click",()=>{
             this.deleteById();
         });
 ```
 
-```
+```javascript
 deleteById : function(){
         var id = $("#boardId").text();
         $.ajax({
@@ -1658,7 +1658,7 @@ deleteById : function(){
 
 * 삭제함수는 간단하지만, 위에서 언급했듯, 보안상의 문제도 신경써야하니 principal에 등록된 session 객체와 board의 user가 다르면 삭제가 불가능하게끔 만들어 주긴 해야한다.
 
-```
+```java
 @Transactional
   public void 글삭제하기(int id){
     boardRepository.deleteById(id);
@@ -1667,7 +1667,7 @@ deleteById : function(){
 
 **BoardApiController.java**
 
-```
+```java
 @DeleteMapping("/api/board/{id}")
   public ResponseDto<Integer> deleteById(@PathVariable int id){
     boardService.글삭제하기(id);
@@ -1676,4 +1676,91 @@ deleteById : function(){
 ```
 
 ----------------------------------
+
+## 59강 - 글 수정하기
+
+글 수정하기는 Update로 하는것이며, 더티체킹을 이용해 별도의 save과정없이 진행할 수 있다.
+
+글 수정하기 또한 삭제하기와 마찬가지로 서버단에서 session의 id와 board의 user id와 비교하는 과정이 필수적으로 있어야 하지만, 여기선 따로 다루지 않았고 프론트단에서 버튼만 보이지 않게끔 해주었다.
+
+**updateForm.jsp**
+
+* hidden 태그로 감춰준 board의 id를 javascript에서 사용하기 위해 추가해주었다.
+
+```jsp
+<input type="hidden" id="updateId" value="${board.id}">
+```
+
+**board.js**
+
+* 언제나 그렇듯 ajax 코드는 간단하게 위와 동일하다 다만, id값을 불러올때 html 태그 내의 value안에 있는 값은 val()로, 태그 내부 텍스트는 text()로 불러온다.
+* type의 경우 자바스크립트에서는 자동으로 변환이 된다. "123"의 경우 int로, "123____"의 경우 string으로 자동 변환.
+
+```javascript
+$("#btn-update").on("click",()=>{
+            this.updateById();
+        });
+```
+
+```javascript
+updateById: function() {
+        let id = $("#updateId").val();
+        let data = {
+            title: $("#title").val(),
+            content: $("#content").val(),
+        }
+        console.log(id,data);
+        $.ajax({
+            type : "PUT",
+            url : "/api/board/"+id,
+            data : JSON.stringify(data),
+            contentType: "application/json; charset=utf-8",
+            dataType : "json"
+        }).done(function(resp){
+            alert("글 수정 완료.")
+            location.href = "/";
+        }).fail(function(error){
+            alert(JSON.stringify(error));
+            console.log(JSON.stringify(error));
+        });
+    },
+```
+
+**BoardController.java**
+
+```java
+@GetMapping("/board/{id}/updateForm")
+    public String UpdateForm(@PathVariable int id, Model model){
+        model.addAttribute("board",boardService.글상세보기(id));
+        return "board/updateForm";
+    }
+```
+
+**BoardApiController.java**
+
+```java
+@PutMapping("/api/board/{id}")
+  public ResponseDto<Integer> update(@PathVariable int id, @RequestBody Board board){
+    System.out.println("수정하기 컨트롤러 호출.");
+    boardService.글수정하기(id,board);
+    System.out.println("수정하기 끝남.");
+    return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
+  }
+```
+
+**BoardService.java**
+
+* 여기서 따로 repository에서 save를 하지 않은 이유는, 더티체킹으로 알아서 함수 종료시 save 되기 때문.
+
+```java
+@Transactional
+  public void 글수정하기(int id,Board requestBoard){
+    Board board = boardRepository.findById(id).orElseThrow(()->{
+      return new IllegalArgumentException("글 찾기 실패 : 아이디 찾을수 없음.");
+    });
+    board.setTitle(requestBoard.getTitle());
+    board.setContent(requestBoard.getContent());
+    System.out.println("수정하기 service 호출됨");
+  }
+```
 

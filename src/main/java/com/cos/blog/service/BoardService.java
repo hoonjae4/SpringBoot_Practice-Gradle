@@ -40,4 +40,15 @@ public class BoardService {
   public void 글삭제하기(int id){
     boardRepository.deleteById(id);
   }
+
+  @Transactional
+  public void 글수정하기(int id,Board requestBoard){
+    Board board = boardRepository.findById(id).orElseThrow(()->{
+      return new IllegalArgumentException("글 찾기 실패 : 아이디 찾을수 없음.");
+    });
+    board.setTitle(requestBoard.getTitle());
+    board.setContent(requestBoard.getContent());
+    System.out.println("수정하기 service 호출됨");
+    //해당 함수 종료시 트랜잭션이 종료되고, 영속화 되어잇는 board의 데이터가 달라졌기 때문에 자동으로 update됨. 따로 save 안해도 된단것.
+  }
 }
