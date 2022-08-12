@@ -4,6 +4,10 @@ import com.cos.blog.model.RoleType;
 import com.cos.blog.model.User;
 import com.cos.blog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +26,26 @@ public class UserService {
 
   @Autowired
   private BCryptPasswordEncoder encoder;
+
   @Transactional //회원가입 전체의 서비스가 하나의 transaction으로 묶이게 됨. 성공시 commit, 실패는 rollback
-  public int 회원가입(User user) {
+  public void 회원가입(User user) {
     user.setRole(RoleType.USER);
     String rawPassword = user.getPassword();
     String encPassword = encoder.encode(rawPassword);
     user.setPassword(encPassword);
     userRepository.save(user);
-    return 1;
+  }
+
+  @Transactional
+  public void 회원수정(User user){
+    User persistance = userRepository.findById(user.getId()).orElseThrow(()->{
+      return new IllegalArgumentException("유저 아이디 찾기 실패.");
+    });
+    String rawPassword = user.getPassword();
+    String encPassword = encoder.encode(rawPassword);
+    persistance.setPassword(encPassword);
+    persistance.setEmail(user.getEmail());
+
   }
 }
 

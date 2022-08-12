@@ -1764,3 +1764,167 @@ updateById: function() {
   }
 ```
 
+---------------------------------------------------------------------------------------------
+
+## 61~62 - 회원 수정하기 및 세션 직접 수정하기.
+
+이번 강의에서는 User데이터를 수정하는 과정을 거쳤다.
+
+회원 데이터를 수정하는건 글을 수정하는것과 같이 더티체킹을 이용해 수정하여고, 글 수정하기에서는 쿼리스트링을 이용해 id값을 가져왔지만, 회원수정에서는 JSON 데이터를 쏴서 가입하였다. 그러나, 실제로는 쿼리스트링을 이용해 url을 구분하는 식으로 하는 경우가 더 많다.
+
+**user/updateForm.jsp**
+
+* joinForm에서 가져온것 그대로 사용.
+
+```jsp
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+
+<%@ include file="../layout/header.jsp" %>
+<div class="container">
+    <!-- <form action="/user/join" method="POST"> 을 사용하지 않을것-->
+    <form>
+        <input type="hidden" id="id" value="${principal.user.id}">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" value="${principal.user.username}" class="form-control" placeholder="Enter username" id="username" readonly>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" value="${principal.user.email}" class="form-control" placeholder="Enter email" id="email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" placeholder="Enter password" id="password">
+        </div>
+    </form>
+    <button id="btn-update" class="btn btn-primary">수정 완료</button>
+</div>
+<!-- static 경로는 알아서 찾아감 -->
+<script src="/js/user.js"></script>
+<%@ include file="../layout/footer.jsp" %>
+```
+
+**user.js**
+
+* ajax이용
+
+```javascript
+$("#btn-update").on("click",() =>{
+            this.updateById();
+        });
+```
+
+```javascript
+updateById: function() {
+        let data = {
+            id: $("#id").val(),
+            username: $("#username").val(),
+            password: $("#password").val(),
+            email: $("#email").val()
+        }
+        $.ajax({
+            type : "PUT",
+            url : "/user",
+            data : JSON.stringify(data), //데이터를 json으로 변경
+            contentType: "application/json; charset=utf-8",
+            dataType : "json"
+        }).done(function(resp){
+            alert("회원수정이 완료 되었습니다.")
+            location.href = "/";
+        }).fail(function(error){
+            alert(JSON.stringify(error));
+            console.log(JSON.stringify(error));
+        });
+
+    }
+```
+
+**UserController.java**
+
+* request body를 통해 id를 가져왔기 때문에 url에 {id}가 없는것 확인.
+
+```java
+@GetMapping("/user/updateForm")
+    public String updateForm(@AuthenticationPrincipal PrincipalDetail principal){
+        return "user/updateForm";
+    }
+```
+
+**UserApiController.java**
+
+* json data(get이외의 요청)은 RequestBody에 담겨서 온다.
+
+```java
+@PutMapping("/user")
+    public ResponseDto<Integer> update(@RequestBody User user,@AuthenticationPrincipal PrincipalDetail principal,HttpSession session){
+        System.out.println("usercontorller : update 호출 :" + user.getId());
+        userService.회원수정(user);
+        }
+```
+
+**UserService.java**
+
+```java
+@Transactional
+  public void 회원수정(User user){
+    User persistance = userRepository.findById(user.getId()).orElseThrow(()->{
+      return new IllegalArgumentException("유저 아이디 찾기 실패.");
+    });
+    String rawPassword = user.getPassword();
+    String encPassword = encoder.encode(rawPassword);
+    persistance.setPassword(encPassword);
+    persistance.setEmail(user.getEmail());
+
+  }
+```
+
+
+
+하지만 이렇게만 적용하면 회원수정 후 회원정보에 들어갔을때 Email이 바뀌지 않은 것을 확인 할 수 있다.
+
+Mysql Workbench에서는 잘 적용되어 있는데 왜 적용이 되지 않은 걸까?
+
+이는 세션이 갱신되지 않아서이다. 회원정보는 수정되었지만, 브라우저에서 가지고 있는 세션 데이터는 아직 수정 전 상태이기 때문에, 우리는 이를 직접 갱신해 주거나 아니면 강제로 로그아웃 시키는 방법을 이용해야한다.
+
+우리는 세션을 직접 갱신시키는 방식을 이용하도록 하겠다. SpringSecurity를 수정하자.
+
+**SecurityConfig.java**
+
+* AuthenticationManager를 override해서, Bean으로 등록해 IOC 처리를 해주자.
+
+```java
+@Bean
+  @Override
+  public AuthenticationManager authenticationManagerBean() throws Exception {
+    return super.authenticationManagerBean();
+  }
+```
+
+**UserApiController.java**
+
+* Authentication 객체를 이용해 session에 새로운 UsernamePassword토큰을 넣어주고
+* SecurityContextHolder를 통해 새로운 세션을 등록해 준다.
+
+```java
+@PutMapping("/user")
+    public ResponseDto<Integer> update(@RequestBody User user,
+                                       @AuthenticationPrincipal PrincipalDetail principal,
+                                       HttpSession session){
+        System.out.println("usercontorller : update 호출 :" + user.getId());
+        userService.회원수정(user);
+        //세션 등록
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        //서비스 종료시 세션 새로 등록.
+        return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
+    }
+```
+
+이렇게 하면 세션이 새롭게 저장된다
+
+--------------------------------
+
+
+
+
+

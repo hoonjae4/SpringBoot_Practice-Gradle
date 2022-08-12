@@ -4,6 +4,7 @@ import com.cos.blog.controller.config.auth.PrincipalDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,11 +29,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   //시큐리티가 대신 로그인 할때 password를 가로채는데 해당 password가 어떻게 해시가 되어서 회원가입이 되었는지 알아야 같은 해시로 암호화해서 db에 있는 해시랑 비교할수 있음.
   @Autowired
   private PrincipalDetailService principalDetailService;
+
+  //세션을 직접 수정해주는과정
+  @Bean
+  @Override
+  public AuthenticationManager authenticationManagerBean() throws Exception {
+    return super.authenticationManagerBean();
+  }
+
   @Override
   protected void configure(AuthenticationManagerBuilder auth) throws Exception {
     auth.userDetailsService(principalDetailService).passwordEncoder(encodePWD());
     //로그인 할 때 패스워드를 어떻게 인코드 했는지 식별해서 비교해줌.
   }
+
+
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
