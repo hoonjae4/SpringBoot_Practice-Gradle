@@ -1845,7 +1845,7 @@ updateById: function() {
 
 ```java
 @GetMapping("/user/updateForm")
-    public String updateForm(@AuthenticationPrincipal PrincipalDetail principal){
+    public String updateForm(){
         return "user/updateForm";
     }
 ```
@@ -1856,7 +1856,7 @@ updateById: function() {
 
 ```java
 @PutMapping("/user")
-    public ResponseDto<Integer> update(@RequestBody User user,@AuthenticationPrincipal PrincipalDetail principal,HttpSession session){
+    public ResponseDto<Integer> update(@RequestBody User user){
         System.out.println("usercontorller : update 호출 :" + user.getId());
         userService.회원수정(user);
         }
@@ -1920,7 +1920,7 @@ Mysql Workbench에서는 잘 적용되어 있는데 왜 적용이 되지 않은 
     }
 ```
 
-이렇게 하면 세션이 새롭게 저장된다
+이렇게 하면 세션이 새롭게 저장된다,
 
 --------------------------------
 
