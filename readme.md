@@ -1922,9 +1922,510 @@ Mysql Workbench에서는 잘 적용되어 있는데 왜 적용이 되지 않은 
 
 이렇게 하면 세션이 새롭게 저장된다,
 
+
+
+[스프링부트 with JPA 블로그 13강 - 시큐리티 동작 원리 :: GetInThere (tistory.com)](https://getinthere.tistory.com/29?category=884180)
+
+Security의 동작 원리에 대해서는 여기를 참고하자.
+
 --------------------------------
 
+## 62~65강 -> 카카오 로그인 구현.
+
+카카오 로그인을 구현하기에 앞서, 카카오 로그인 API를 가져와야 한다.
+
+**[Kakao Developers](https://developers.kakao.com/)** -> 카카오 api 등록
+
+* 로그인 -> 내 애플리케이션 -> 애플리케이션 추가하기 -> 작성후 등록.
+* 앱 키 확인 -> 이 프로젝트에선 REST API키 등록.
+* 옆에 메뉴 -> 카카오 로그인 -> 활성화, Redirect URI 등록 (http://localhost:8080/auth/kakao/callback)
+  * 스프링 시큐리티를 이용하기 때문에, 로그인 화면에는 인증없이 들어가기 위해 auth를 추가해줌.
+* 동의 항목에서 닉네임, 프로필사진, 이메일을 등록해주자
+  * 이메일은 선택 동의만 가능하다.
+  * 다른 항목은 필요에따라 체크해주면 된다.
+
+* 사용 준비 완료.
+
+사용 준비를 맞췃고 callback 함수를 설정했으니 이를 어떻게 사용할지 알아야 한다.
+
+callback 함수가 작동하는걸 확인하기 위해 UserController에 get요청을 추가해주자.
+
+카카오 로그인 아이콘은 **도구 - 리소스 다운로드** 에서 다운이 가능하다
+
+**UserController.java**
+
+```java
+@GetMapping("/auth/kakao/callback")
+public @ResponseBody String kakaoCallback(String code){
+    return "콜백 요청 완료"
+}
+```
+
+잘 작동하는 것을 확인했으면, 이제 kakao api에 POST요청을 보내 정보를 가져오자.
+
+이와 관련된 메뉴얼은 **문서 - 카카오 로그인 - REST API** 에서 확인이 가능하다. 
+
+#### Request
+
+##### URL
+
+```http
+GET /oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code HTTP/1.1
+Host: kauth.kakao.com
+```
+
+##### Parameter
+
+| Name          | Type     | Description                                                  | Required |
+| :------------ | :------- | :----------------------------------------------------------- | :------- |
+| client_id     | `String` | 앱 REST API 키 [내 애플리케이션] > [앱 키]에서 확인 가능     | O        |
+| redirect_uri  | `String` | 인가 코드가 리다이렉트될 URI                                 | O        |
+| response_type | `String` | `code`로 고정                                                | O        |
+| state         | `String` | 카카오 로그인 과정 중 동일한 값을 유지하는 임의의 문자열(정해진 형식 없음) [Cross-Site Request Forgery(CSRF)](https://en.wikipedia.org/wiki/Cross-site_request_forgery) 공격으로부터 카카오 로그인 요청을 보호하기 위해 사용 각 사용자의 로그인 요청에 대한 `state` 값은 고유해야 함 인가 코드 요청, 인가 코드 응답, 토큰 발급 요청의 `state` 값 일치 여부로 요청 및 응답 유효성 확인 가능 | X        |
+| prompt        | `String` | 동의 화면 요청 시 추가 상호작용을 요청하고자 할 때 전달하는 파라미터 쉼표(,)로 구분된 문자열 값 목록으로 전달  다음 값 사용 가능: `login`: 기존 사용자 인증 여부와 상관없이 사용자에게 카카오계정 로그인 화면을 출력하여 다시 사용자 인증을 수행하고자 할 때 사용, 카카오톡 인앱 브라우저에서는 이 기능이 제공되지 않음 `none`: 사용자에게 동의 화면과 같은 대화형 UI를 노출하지 않고 인가 코드 발급을 요청할 때 사용, 인가 코드 발급을 위해 사용자의 동작이 필요한 경우 에러 응답 전달 | X        |
+| nonce         | `String` | [OpenID Connect](https://developers.kakao.com/docs/latest/ko/kakaologin/common#oidc)를 통해 ID 토큰을 함께 발급받을 경우, [ID 토큰 재생](https://en.wikipedia.org/wiki/Replay_attack) 공격을 방지하기 위해 사용 [ID 토큰 유효성 검증](https://developers.kakao.com/docs/latest/ko/kakaologin/common#oidc-id-token-verify) 시 대조할 임의의 문자열(정해진 형식 없음) | X        |
+
+\* auth_type: Deprecated, prompt를 사용하도록 변경
+
+#### Response
+
+| Name              | Type     | Description                                                  | Required |
+| :---------------- | :------- | :----------------------------------------------------------- | :------- |
+| code              | `String` | [토큰 받기](https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#request-token) 요청에 필요한 인가 코드 | X        |
+| state             | `String` | 요청 시 전달한 `state` 값과 동일한 값                        | X        |
+| error             | `String` | 인증 실패 시 반환되는 에러 코드                              | X        |
+| error_description | `String` | 인증 실패 시 반환되는 에러 메시지                            | X        |
+
+먼저, 우리는 로그인 Form을 작성해 kakao login API을 GET요청으로 불러와야 한다.
+
+**loginForm.jsp**
+
+* 로그인 버튼 옆에 a태그로 **Host/GET요청 주소** 를 담아준다.
+* ${REST_API_KEY},${REDIRECT_URI} 에는 처음 설정한 key와 URI를 넣어주자.
+* 그 후 실행해 api 호출이 되는지 확인한다.
+* 이외의 다양한 field가 문서에 등록되있는데, 위의 예시처럼 쿼리스트링으로 넣어서 담아주면 되지만, 여기서는 사용하지 않는다.
+* 이후 kakao api 호출에 성공하면, 주소에 쿼리스트링으로 code값이 주어진다. 이를 이용해 토큰 요청을 보내고, 로그인 정보를 가져오게 된다.
+
+```jsp
+<button id="btn-login" class="btn btn-primary">로그인</button>
+        <a href="https://kauth.kakao.com/oauth/authorize?client_id=8486dbad96748f7d1e942c5a6ac3c7b2&redirect_uri=http://localhost:8080/auth/kakao/callback&response_type=code">
+            <img height="38px" src="/image/kakao_login_button.png">
+        </a>
+```
+
+#### Request
+
+##### URL
+
+```http
+POST /oauth/token HTTP/1.1
+Host: kauth.kakao.com
+Content-type: application/x-www-form-urlencoded;charset=utf-8
+```
+
+##### Parameter
+
+| Name          | Type     | Description                                                  | Required |
+| :------------ | :------- | :----------------------------------------------------------- | :------- |
+| grant_type    | `String` | `authorization_code`로 고정                                  | O        |
+| client_id     | `String` | 앱 REST API 키 [내 애플리케이션] > [앱 키]에서 확인 가능     | O        |
+| redirect_uri  | `String` | 인가 코드가 리다이렉트된 URI                                 | O        |
+| code          | `String` | 인가 코드 받기 요청으로 얻은 인가 코드                       | O        |
+| client_secret | `String` | 토큰 발급 시, 보안을 강화하기 위해 추가 확인하는 코드 [내 애플리케이션] > [보안]에서 설정 가능 ON 상태인 경우 필수 설정해야 함 | X        |
+
+#### Response
 
 
 
+| Name                     | Type      | Description                                                  | Required |
+| :----------------------- | :-------- | :----------------------------------------------------------- | :------- |
+| token_type               | `String`  | 토큰 타입, `bearer`로 고정                                   | O        |
+| access_token             | `String`  | 사용자 액세스 토큰 값                                        | O        |
+| id_token                 | `String`  | [ID 토큰](https://developers.kakao.com/docs/latest/ko/kakaologin/common#oidc-id-token) 값 OpenID Connect 확장 기능을 통해 발급되는 ID 토큰, Base64 인코딩 된 사용자 인증 정보 포함  제공 조건: [OpenID Connect](https://developers.kakao.com/docs/latest/ko/kakaologin/common#oidc)가 활성화 된 앱의 토큰 발급 요청인 경우 또는 `scope`에 `openid`를 포함한 [추가 항목 동의 받기](https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#additional-consent) 요청을 거친 토큰 발급 요청인 경우 | X        |
+| expires_in               | `Integer` | 액세스 토큰과 ID 토큰의 만료 시간(초)  참고: 액세스 토큰과 ID 토큰의 만료 시간은 동일 | O        |
+| refresh_token            | `String`  | 사용자 리프레시 토큰 값                                      | O        |
+| refresh_token_expires_in | `Integer` | 리프레시 토큰 만료 시간(초)                                  | O        |
+| scope                    | `String`  | 인증된 사용자의 정보 조회 권한 범위 범위가 여러 개일 경우, 공백으로 구분  참고: [OpenID Connect](https://developers.kakao.com/docs/latest/ko/kakaologin/common#oidc)가 활성화된 앱의 토큰 발급 요청인 경우, ID 토큰이 함께 발급되며 `scope` 값에 `openid` 포함 |          |
+
+위에서 가져온 토큰을 통해 우리는 카카오 로그인 정보를 가져와야 한다.
+
+Request에 필요한 parameter를 전달해줘야 한다. 그 후 반환되는 token 값들을 저장할 객체부터 만들어주자.
+
+**model/OAuthToken.java**
+
+* 필수적으로 return되는 type들을 저장하기 위한 OAuthToken을 만들어주고, Lombok을 이용해 getter, setter를 만들자.
+
+```java
+package com.cos.blog.model;
+
+
+import lombok.Data;
+
+@Data
+public class OAuthToken {
+  private String access_token;
+  private String token_type;
+  private String refresh_token;
+  private int expires_in;
+  private String scope;
+  private int refresh_token_expires_in;
+}
+```
+
+
+
+**UserController.java**
+
+* RestTemplate로 http, post요청을 하자
+* httpheaders로 필요한 헤더 정보를 저장한다.(Content-type)
+* MultiValueMap에 필요한 파라미터 정보를 담아준다.
+* response 객체에 반환값을 담아준다.
+  * 이 반환값 안에는 access_token과 같은 타입들이 들어있다. 이는 json 타입이므로 이를 java객체로 변환해줘야 하는데 이때 사용하는게 ObjectMapping이다. (다양한 방식이 있다.)
+* ObjectMapper를 이용해 미리 선언해준 oauthToken에 response 정보를 저장하자.
+  * 이를 통해 다음번에 사용할 Token으로 로그인 정보를 가져오는 작업이 가능해 진다. getter를 이용해 access_token과 같은 필드의 값들을 다 가져올수 있기 때문이다.
+
+```java
+@GetMapping("/auth/kakao/callback")
+    public @ResponseBody String kakaoCallback(String code){
+        //@ResponseBody -> 데이터 리턴 함수
+        //POST 방식으로 key value 타입의 데이터를 요청
+        RestTemplate rt = new RestTemplate(); //http 요청을 간단하게 할수있는것.
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-type","application/x-www-form-urlencoded;charset=utf-8");
+        //전송할 데이터가 key,value임을 알려줌.
+
+        MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type","authorization_code");
+        params.add("client_id","8486dbad96748f7d1e942c5a6ac3c7b2");
+        params.add("redirect_uri","http://localhost:8080/auth/kakao/callback");
+        params.add("code",code);
+
+        //httpheader와 httpbody를 하나의 오브젝트에 담기
+        HttpEntity<MultiValueMap<String,String>> kakaoTokenRequest =
+                new HttpEntity<>(params,headers);
+
+        // Http 요청하기 = post방식 - 그리고 response 변수의 응답을 받음.
+        ResponseEntity response = rt.exchange(
+                "https://kauth.kakao.com/oauth/token",
+                HttpMethod.POST,
+                kakaoTokenRequest,
+                String.class
+        );
+
+        // Gson, Json simple, ObjectMapper 라이브러리 중에 ObjectMapper사용.
+        // json 데이터를 java 객체로 변환하는 작업. object mapper를 통해 response 데이터를 OAuthToken으로 변환해주자.
+        ObjectMapper objectMapper = new ObjectMapper();
+        OAuthToken oauthToken= null;
+        try {
+            oauthToken = objectMapper.readValue((String)response.getBody(),OAuthToken.class);
+        }catch (JsonMappingException e){
+            e.printStackTrace();
+        }catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
+        return ""+response.getBody();
+    }
+```
+
+
+
+이후, 받은 token을 가지고 로그아웃과 사용자 정보를 가져오는 과정을 거쳐야 하는데
+
+로그아웃 기능은 따로 구현하지 않겠다. (나중에 개인 프로젝트에서 해보자)
+
+로그아웃 기능은 더이상 이 api로 접근이 불가능하게 토큰을 만료시키는 과정이기 때문에 필요하다. 하지만, 우리는 스프링시큐리티가 로그아웃을 해주고, 보안적인 부분을 따로 구현할 이유가 없기에 패스. 다만, 나중에는 꼭 해봐야함. 같은 토큰을 계속 두는건 보안상 위험.
+
+#### Request: 액세스 토큰 사용
+
+##### URL
+
+```http
+GET/POST /v2/user/me HTTP/1.1
+Host: kapi.kakao.com
+Authorization: Bearer ${ACCESS_TOKEN}
+Content-type: application/x-www-form-urlencoded;charset=utf-8
+```
+
+##### Header
+
+| Name          | Description                                                  | Required |
+| :------------ | :----------------------------------------------------------- | :------- |
+| Authorization | 사용자 인증 수단, 액세스 토큰 값 `Authorization: Bearer ${ACCESS_TOKEN}` | O        |
+
+##### Parameter
+
+| Name            | Type       | Description                                                  | Required |
+| :-------------- | :--------- | :----------------------------------------------------------- | :------- |
+| secure_resource | `Boolean`  | 이미지 URL 값 HTTPS 여부, true 설정 시 HTTPS 사용, 기본 값 false | X        |
+| property_keys   | `String[]` | Property 키 목록, JSON Array를 ["kakao_account.email"]과 같은 형식으로 사용 | X        |
+
+이제 Access_token을 이용해 사용자 정보를 가져올 것이다.
+
+먼저, 이해를 돕기 위해 response값을 출력해보자.
+
+**UserController.java**
+
+* 필요한 헤더와 필드(여기선X)를 위와 동일한 방식으로 등록하자.
+
+```java
+//Access_token으로 사용자 정보 가져오기.
+        RestTemplate rt2 = new RestTemplate();
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.add("Authorization","Bearer "+oauthToken.getAccess_token());
+        headers2.add("Content-type","application/x-www-form-urlencoded;charset=utf-8");
+
+        HttpEntity<MultiValueMap<String,String>> kakaoProfileRequest =
+                new HttpEntity<>(headers2);
+
+        ResponseEntity response2 = rt2.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.POST,
+                kakaoProfileRequest,
+                String.class
+        );
+return response2.getBody();
+```
+
+이대로 실행해보면 response2의 값이 json형태의 데이터임을 알 수 있다. 그렇다면 위와 동일하게 이를 ObjectMapping을 이용해 java 객체로 변환해줘야하는데, 그러기 위해선 json 데이터와 일치하는 객체를 생성해줘야 한다.
+
+이를 위해 사용하는 것이
+
+[**jsonschema2pojo**](https://www.jsonschema2pojo.org/) 이것이다. 반환된 json data를 넣고 Preview를 클릭하면 객체를 자동으로 생성해주지만, 이를 어떻게 보기 좋게 만들지는 본인이 해야한다.
+
+**model/kakaoProfile.java**
+
+```java
+package com.cos.blog.model;
+
+import lombok.Data;
+
+@Data
+public class KakaoProfile {
+
+  public Long id;
+  public String connected_at;
+  public Properties properties;
+  public Kakao_account kakao_account;
+
+  @Data
+  static public class Properties {
+
+    public String nickname;
+    public String profile_image;
+    public String thumbnail_image;
+
+  }
+  @Data
+  static public class Kakao_account {
+
+    public Boolean profile_nickname_needs_agreement;
+    public Boolean profile_image_needs_agreement;
+    public Profile profile;
+    public Boolean has_email;
+    public Boolean email_needs_agreement;
+    public Boolean is_email_valid;
+    public Boolean is_email_verified;
+    public String email;
+
+  }
+
+  @Data
+  static public class Profile {
+
+    public String nickname;
+    public String thumbnail_image_url;
+    public String profile_image_url;
+    public Boolean is_default_image;
+
+  }
+
+}
+
+```
+
+이 객체와 ObjectMapper를 이용해 데이터를 객체로 변환해주자. 그리고, 로그인을 수행하는데 여기서 key값을 설정하기 위해 application.yml에 필드를 추가해주자
+
+**application.yml**
+
+* 이 key값은 무조건 보호해야한다. 절대 남에게 알려주면 안된다.
+
+```yaml
+cos:
+  key: cos1234
+```
+
+또한 카카오로 가입한 유저와, 일반 유저의 차이를 두기 위해서 User model도 수정해주자
+
+**User.java**
+
+* 카카오로 가입한 유저는 kakao를 넣어주고, 그냥 가입한 유저는 NULL로 유지.
+
+```java
+private String oauth; //kakao,google.
+```
+
+
+
+**UserController.java**
+
+* Controller 전체 리소스
+* @ResponseBody는 이제 사용하지 않을것이기에 지움.
+* object mapper를 이용해 json data-> java object로 변환해주고 이를, kakaoUser의 Builder를 이용해 kakaoUser 객체에 저장해주자. 
+  * 이 때 카카오 유저임을 구분하기 위해, username 뒤에 kakao user id를 추가하자.
+  * password는 yml에서 설정한 공용 키 비밀번호인 cos1234를 이용한다.
+* 마지막으로 회원을 저장한다
+  * 이 떄, 중복된 username이 있으면 안되니 회원찾기 메소드를 UserService에서 추가하고, 이를 이용해 중복된 데이터가 있으면 회원가입 X, 없으면 회원가입을 진행한다.
+  * 그리고 마지막으로 세션에 직접 로그인 정보를 등록해준다.
+
+```java
+@GetMapping("/auth/kakao/callback")
+    public String kakaoCallback(String code){
+        //@ResponseBody -> 데이터 리턴 함수
+        //POST 방식으로 key value 타입의 데이터를 요청
+        RestTemplate rt = new RestTemplate(); //http 요청을 간단하게 할수있는것.
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-type","application/x-www-form-urlencoded;charset=utf-8");
+        //전송할 데이터가 key,value임을 알려줌.
+
+        MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type","authorization_code");
+        params.add("client_id","8486dbad96748f7d1e942c5a6ac3c7b2");
+        params.add("redirect_uri","http://localhost:8080/auth/kakao/callback");
+        params.add("code",code);
+
+        //httpheader와 httpbody를 하나의 오브젝트에 담기
+        HttpEntity<MultiValueMap<String,String>> kakaoTokenRequest =
+                new HttpEntity<>(params,headers);
+
+        // Http 요청하기 = post방식 - 그리고 response 변수의 응답을 받음.
+        ResponseEntity response = rt.exchange(
+                "https://kauth.kakao.com/oauth/token",
+                HttpMethod.POST,
+                kakaoTokenRequest,
+                String.class
+        );
+
+        // Gson, Json simple, ObjectMapper 라이브러리 중에 ObjectMapper사용.
+        // json 데이터를 java 객체로 변환하는 작업. object mapper를 통해 response 데이터를 OAuthToken으로 변환해주자.
+        ObjectMapper objectMapper = new ObjectMapper();
+        OAuthToken oauthToken= null;
+        try {
+            oauthToken = objectMapper.readValue((String)response.getBody(),OAuthToken.class);
+        }catch (JsonMappingException e){
+            e.printStackTrace();
+        }catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
+        //System.out.println(oauthToken.getAccess_token());
+
+        //Access_token으로 사용자 정보 가져오기.
+        RestTemplate rt2 = new RestTemplate();
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.add("Authorization","Bearer "+oauthToken.getAccess_token());
+        headers2.add("Content-type","application/x-www-form-urlencoded;charset=utf-8");
+
+        HttpEntity<MultiValueMap<String,String>> kakaoProfileRequest =
+                new HttpEntity<>(headers2);
+
+        ResponseEntity response2 = rt2.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.POST,
+                kakaoProfileRequest,
+                String.class
+        );
+        //Objcet Mapper로 response2 객체를 자바 객체로 변경.
+        ObjectMapper objectMapper2 = new ObjectMapper();
+        KakaoProfile kakaoProfile = null;
+        try {
+            kakaoProfile = objectMapper2.readValue((String)response2.getBody(),KakaoProfile.class);
+        }catch (JsonMappingException e){
+            e.printStackTrace();
+        }catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
+
+        System.out.println("카카오 아이디(번호) : " + kakaoProfile.getId());
+        System.out.println("카카오 사용자(이름) : " + kakaoProfile.getProperties().getNickname());
+        System.out.println("카카오 이메일 : " + kakaoProfile.getKakao_account().getEmail());
+        // 이 정보로 username, password, email을 구성할 것.
+        System.out.println("블로그 서버 유저 네임 : " + kakaoProfile.getKakao_account().getEmail() + "_" + kakaoProfile.getId());
+        System.out.println("블로그 서버 이메일 : " + kakaoProfile.getKakao_account().getEmail());
+
+        User kakaoUser = User.builder()
+                .username(kakaoProfile.getKakao_account().getEmail() + "_" + kakaoProfile.getId())
+                .password(cosKey)
+                .oauth("kakao")
+                .email(kakaoProfile.getKakao_account().getEmail())
+                .build();
+
+        User originUser = userService.회원찾기(kakaoUser.getUsername());
+        if(originUser.getUsername() == null) {
+            System.out.println("신규회원. 카카오 회원가입");
+            userService.회원가입(kakaoUser);
+        }
+        
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(kakaoUser.getUsername(),cosKey));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return "redirect:/";
+    }
+```
+
+**UserService.java**
+
+```java
+  @Transactional(readOnly = true)
+  public User 회원찾기(String username){
+    User user = userRepository.findByUsername(username).orElseGet(()->{
+      return new User();
+    });
+    return user;
+  }
+}
+```
+
+그리고 kakao user는 email과 password가 수정이 불가능 하게 Form과 Service를 수정해준다
+
+**user/updateForm.jsp**
+
+```jsp
+<c:if test="${empty principal.user.oauth}">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" value="${principal.user.email}" class="form-control" placeholder="Enter email" id="email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" placeholder="Enter password" id="password">
+            </div>
+        </c:if>
+        <c:if test="${not empty principal.user.oauth}">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" value="${principal.user.email}" class="form-control" placeholder="Enter email" id="email" readonly>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" placeholder="Enter password" id="password" readonly>
+            </div>
+        </c:if>
+```
+
+**UserService.java**
+
+* Oauth 값을 이용해 카카오 유저인지, 일반 유저인지 구분.
+
+```java
+@Transactional
+  public void 회원수정(User user){
+    User persistance = userRepository.findById(user.getId()).orElseThrow(()->{
+      return new IllegalArgumentException("유저 아이디 찾기 실패.");
+    });
+    if(persistance.getOauth()==null || persistance.getOauth().equals("")){
+      String rawPassword = user.getPassword();
+      String encPassword = encoder.encode(rawPassword);
+      persistance.setPassword(encPassword);
+      persistance.setEmail(user.getEmail());
+    }
+  }
+```
 

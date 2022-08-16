@@ -41,11 +41,21 @@ public class UserService {
     User persistance = userRepository.findById(user.getId()).orElseThrow(()->{
       return new IllegalArgumentException("유저 아이디 찾기 실패.");
     });
-    String rawPassword = user.getPassword();
-    String encPassword = encoder.encode(rawPassword);
-    persistance.setPassword(encPassword);
-    persistance.setEmail(user.getEmail());
+    if(persistance.getOauth()==null || persistance.getOauth().equals("")){
+      String rawPassword = user.getPassword();
+      String encPassword = encoder.encode(rawPassword);
+      persistance.setPassword(encPassword);
+      persistance.setEmail(user.getEmail());
+    }
 
+  }
+
+  @Transactional(readOnly = true)
+  public User 회원찾기(String username){
+    User user = userRepository.findByUsername(username).orElseGet(()->{
+      return new User();
+    });
+    return user;
   }
 }
 
