@@ -42,7 +42,7 @@ public class Board {
     private Timestamp createDate;
     
     //연관관계의 주인 -> FK를 가진 오브젝트
-    @OneToMany(mappedBy = "board",fetch = FetchType.LAZY) //reply table에 있는 board를 넣어줌.
+    @OneToMany(mappedBy = "board",fetch = FetchType.LAZY,cascade = CascadeType.REMOVE) //reply table에 있는 board를 넣어줌.
     // mappedBy가 있으면 연관관계의 주인이 아님을 의미함(FK가 아니다), 즉 db에 column을 만들지 마라. Join을 통해 값을 얻기 위해 필요한 것
 
     //
