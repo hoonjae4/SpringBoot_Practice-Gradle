@@ -2429,3 +2429,150 @@ private String oauth; //kakao,google.
   }
 ```
 
+-------------------------------------
+
+## ~68강 - 댓글 생성
+
+우리는 board를 생성하고 수정하는 과정에서 이미 board 객체를 프론트단에 전달해 주었기 때문에 (Controller에서 Get 요청시 Model 객체에 담아줌), 그곳에 포함된 reply 객체를 이용할수 있다. 
+
+**BoardController.java**
+
+```java
+@GetMapping("/board/{id}")
+    public String fintByID(@PathVariable int id,Model model){
+        model.addAttribute("board", boardService.글상세보기(id));
+        return "board/detail";
+    }
+```
+
+Board 객체는 Reply 객체를 가지고 있기 때문이다.
+
+일단 우리는 Reply에 직접 데이터를 입력하고 댓글 출력을 먼저 해 볼 것이다.
+
+**detail.jsp**
+
+```jsp
+<div class="card">
+        <form>
+            <input type="hidden" value="${board.id}" id="reply-boardId">
+            <div class="card-body">
+                <textarea id="reply-content" class="form-control" rows="1"></textarea>
+            </div>
+            <div class="card-footer">
+                <button type="button" id="btn-reply-save" class="btn btn-primary">등록</button>
+            </div>
+        </form>
+    </div>
+    <br/>
+    <div class="card">
+        <div class="card-header">댓글 리스트</div>
+        <ul id="reply--box" class="list-group">
+            <c:forEach var="reply" items="${board.reply}">
+                <li id="reply--1" class="list-group-item d-flex justify-content-between">
+                    <div>${reply.content}</div>
+                    <div class="d-flex">
+                        <div class="font-italic">작성자 : ${reply.user.username} &nbsp;</div>
+                        <button class="badge">삭제</button>
+                    </div>
+                </li>
+            </c:forEach>
+        </ul>
+    </div>
+```
+
+여기서 reply의 user를 출력하는 **${reply.user.username}**를 보면 이 코드는 사실 **board.reply.user.username**이다. 비록, 지금 프로젝트는 db가 매우 적기 때문에 지금 당장에서야 아무런 문제가 되지 않는다.
+
+그러나, db가 조금이라도 커지게 되면 이 방식은 매우 문제가 커지게 된다. 왜냐하면 **순환참조**가 일어나기 때문이다.
+
+**Board.java**
+
+```java
+@OneToMany(mappedBy = "board",fetch = FetchType.LAZY)
+@OrderBy("id desc")
+private List<Reply> reply; 
+
+@ManyToOne
+@JoinColumn(name="userId")
+private User user;
+```
+
+
+
+**Reply.java**
+
+```java
+@ManyToOne
+@JoinColumn(name="boardId")
+private Board board;
+
+@ManyToOne
+@JoinColumn(name="userId")
+private User user;
+```
+
+이 두 모델을 보자. JPA의 특성상 한 객체의 데이터를 조회할때는 getter를 호출하게 되어있다. 그렇다면 **board.reply.user.username**을 호출하는 과정을 생각해보자
+
+* board의 getter 호출 -> board의 모든 데이터 호출
+
+* reply getter 호출 -> reply의 모든 데이터 호출 -> reply는 board,user 가지고 있음 -> 또 board,user getter 호출 -> 1번 반복
+
+의 형태로 계속 같은 entity를 호출하게 되기 때문이다.
+
+그래서 우리는 이걸 해결하기 위해 annotation 하나를 추가해 줄 것이다.
+
+**Board.java**
+
+* @JsonIgnoreProperties -> reply를 통해 데이터가 참조될 때, board객체를 무시하겠다는 뜻이다.
+* 실제로 데이터를 출력해보면, reply객체 안에 board가 사라진걸 확인할 수 있다. 이러면 순환참조를 어느정도 방지할 순 있다. 그러나 Dto를 사용하거나 model을 잘 만드는게 제일 중요하다.
+
+```java
+@OneToMany(mappedBy = "board",fetch = FetchType.LAZY) //reply table에 있는 board를 넣어줌.
+@JsonIgnoreProperties({"board"})
+@OrderBy("id desc")
+private List<Reply> reply;
+```
+
+이렇게 댓글을 불러오는 과정은 특별한 Service 생성이 없이 해결할 수 있었다.
+
+이제 댓글을 생성해 보자.
+
+**BoardApiController.java**
+
+```java
+@PostMapping("/api/board/{boardId}/reply")
+  public ResponseDto<Integer> replySave(@PathVariable int boardId, @RequestBody Reply reply, @AuthenticationPrincipal PrincipalDetail principal){
+    System.out.println("댓글 작성 호출 완료.");
+    boardService.댓글쓰기(principal.getUser(),boardId,reply);
+    return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
+  }
+```
+
+**BoardService.java**
+
+```java
+@Autowired
+  private ReplyRepository replyRepository;
+  @Transactional
+  public void 댓글쓰기(User user, int boardId, Reply requestReply){
+    requestReply.setUser(user);
+    Board board = boardRepository.findById(boardId).orElseThrow(()->{
+      return new IllegalArgumentException("댓글 쓰기 실패 : 게시글을 찾을 수 없습니다.");
+    });
+    requestReply.setBoard(board);
+    replyRepository.save(requestReply);
+  }
+```
+
+**ReplyRepository.java**
+
+```java
+package com.cos.blog.repository;
+
+import com.cos.blog.model.Reply;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ReplyRepository extends JpaRepository<Reply,Integer> {
+}
+
+```
+

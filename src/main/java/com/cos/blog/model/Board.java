@@ -1,5 +1,6 @@
 package com.cos.blog.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -47,6 +48,11 @@ public class Board {
     //
     //@JoinColumn(name="replyId") -> 필요가 없음. forein key까지 가지게 되면 하나의 row에는 하나의 값만을 가지는 데이터베이스의 특성(원자성)상
     //board하나에 100개의 reply가 있다고 가정했을때 그 db의 크기는 매우 커지게 됨.
+    @JsonIgnoreProperties({"board"})
+    //무한 참조를 방지하기 위한 어노테이션임.
+    //Board를 통해 참조하는 reply에서, board를 무시한다는 것.
+    // 만일 여기서 reply를 직접 참조해 가져오는거면 board도 가져올수 있음.
+    @OrderBy("id desc")
     private List<Reply> reply; //하나의 게시글은 여러개의 reply가 필요함 그래서 여러개를 담을 List를 가져옴
 
 

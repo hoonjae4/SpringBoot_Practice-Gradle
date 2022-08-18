@@ -3,6 +3,7 @@ package com.cos.blog.controller.api;
 import com.cos.blog.controller.config.auth.PrincipalDetail;
 import com.cos.blog.controller.dto.ResponseDto;
 import com.cos.blog.model.Board;
+import com.cos.blog.model.Reply;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,6 +36,13 @@ public class BoardApiController {
     System.out.println("수정하기 컨트롤러 호출.");
     boardService.글수정하기(id,board);
     System.out.println("수정하기 끝남.");
+    return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
+  }
+
+  @PostMapping("/api/board/{boardId}/reply")
+  public ResponseDto<Integer> replySave(@PathVariable int boardId, @RequestBody Reply reply, @AuthenticationPrincipal PrincipalDetail principal){
+    System.out.println("댓글 작성 호출 완료.");
+    boardService.댓글쓰기(principal.getUser(),boardId,reply);
     return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
   }
 }

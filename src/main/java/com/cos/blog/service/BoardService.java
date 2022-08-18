@@ -1,8 +1,10 @@
 package com.cos.blog.service;
 
 import com.cos.blog.model.Board;
+import com.cos.blog.model.Reply;
 import com.cos.blog.model.User;
 import com.cos.blog.repository.BoardRepository;
+import com.cos.blog.repository.ReplyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,4 +53,17 @@ public class BoardService {
     System.out.println("수정하기 service 호출됨");
     //해당 함수 종료시 트랜잭션이 종료되고, 영속화 되어잇는 board의 데이터가 달라졌기 때문에 자동으로 update됨. 따로 save 안해도 된단것.
   }
+
+  @Autowired
+  private ReplyRepository replyRepository;
+  @Transactional
+  public void 댓글쓰기(User user, int boardId, Reply requestReply){
+    requestReply.setUser(user);
+    Board board = boardRepository.findById(boardId).orElseThrow(()->{
+      return new IllegalArgumentException("댓글 쓰기 실패 : 게시글을 찾을 수 없습니다.");
+    });
+    requestReply.setBoard(board);
+    replyRepository.save(requestReply);
+  }
 }
+
