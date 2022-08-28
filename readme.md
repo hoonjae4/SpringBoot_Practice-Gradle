@@ -2576,3 +2576,102 @@ public interface ReplyRepository extends JpaRepository<Reply,Integer> {
 
 ```
 
+------------------------------------
+
+## 69강 - 댓글 작성시 Dto 사용하기
+
+Dto를 사용하면 원하는 데이터를 받아서 그것만 이용하기 때문에 코드 작성이 수월해질 수 있다.
+
+또한, 이 목차와는 관련 없지만, Dto를 사용하는것이 순환참조를 애초에 막을수 있는 좋은 방법이다 .
+
+왜냐하면 순환참조는 Entity 전체를 호출하는 과정에서 불필요한 객체까지 호출하고, 이 객체에서 또 다른 Entity를 호출하는 과정인데, Dto를 이용하면 원하는 필드값만 가져오니, 이런 오류를 애초에 방지할 수 있다.
+
+**ReplySaveRequestDto.java**
+
+```
+package com.cos.blog.controller.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ReplySaveRequestDto {
+  private int userId;
+  private int boardId;
+  private String content;
+}
+
+```
+
+**BoardApiController.java**
+
+```java
+@PostMapping("/api/board/{boardId}/reply")
+  public ResponseDto<Integer> replySave(@RequestBody ReplySaveRequestDto replySaveRequestDto){
+    System.out.println("댓글 작성 호출 완료.");
+    boardService.댓글쓰기(replySaveRequestDto);
+    return new ResponseDto<Integer>(HttpStatus.OK.value(),1);
+  }
+```
+
+**BoardService.java**
+
+```java
+@Autowired
+  private ReplyRepository replyRepository;
+  @Autowired
+  private UserRepository userRepository;
+  @Transactional
+  public void 댓글쓰기(ReplySaveRequestDto replySaveRequestDto){
+    User user = userRepository.findById(replySaveRequestDto.getUserId()).orElseThrow(()->{
+      System.out.println(replySaveRequestDto.getUserId());
+      return new IllegalArgumentException("댓글 쓰기 실패 : 사용자를 찾을 수 없습니다.");
+    });
+    Board board = boardRepository.findById(replySaveRequestDto.getBoardId()).orElseThrow(()->{
+      return new IllegalArgumentException("댓글 쓰기 실패 : 게시글을 찾을 수 없습니다.");
+    });
+
+    Reply reply = Reply.builder()
+            .user(user)
+            .board(board)
+            .content(replySaveRequestDto.getContent())
+            .build();
+    replyRepository.save(reply);
+  }
+```
+
+**detail.jsp**
+
+```jsp
+<input type="hidden" value="${board.id}" id="reply-boardId">
+            <input type="hidden" value="${principal.user.id}" id="reply-userId">
+```
+
+**board.js**
+
+```javascript
+replySave: function() {
+        let data = {
+            boardId:$("#reply-boardId").val(),
+            userId: $("#reply-userId").val(),
+            content: $("#reply-content").val()
+        }
+        $.ajax({
+            type : "POST",
+            url : `/api/board/${data.boardId}/reply`,
+            data : JSON.stringify(data),
+            contentType: "application/json; charset=utf-8",
+            dataType : "json"
+        }).done(function(resp){
+            alert("댓글 작성 완료.")
+            location.href = `/board/${data.boardId}`;
+        }).fail(function(error){
+            alert(JSON.stringify(error));
+            console.log(JSON.stringify(error));
+        });
+    }
+```
+
